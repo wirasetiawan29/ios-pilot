@@ -53,11 +53,26 @@ FINDINGS:
 - [ ] No force unwrap, no `print()`, no unresolved `TODO`
 - [ ] Swift 6 concurrency safe
 - [ ] Naming consistent
+- [ ] Errors mapped via `errorMessage(for:)` — no raw `error.localizedDescription` to user
+- [ ] `Logger` used instead of `print()` for diagnostics
 
 **Architecture**
 - [ ] No business logic in Views
 - [ ] No direct network calls in ViewModels
 - [ ] Protocol-based DI
+- [ ] Repository maps `AppNetworkError` to domain errors
+
+**Localization**
+- [ ] No hardcoded English strings in `Text(…)`, `Button(…)`, `.navigationTitle(…)`
+- [ ] All user-facing strings use `L10n.*` or `String(localized:)`
+- [ ] New keys present in `Localizable.xcstrings`
+
+**Accessibility**
+- [ ] All `Button`, `Toggle`, `TextField`, `SecureField` have `.accessibilityLabel`
+- [ ] All interactive elements have `.accessibilityIdentifier` (snake_case)
+- [ ] Decorative images have `.accessibilityHidden(true)`
+- [ ] `ProgressView` has `.accessibilityLabel(L10n.A11y.loading)`
+- [ ] Identifiers match `## Accessibility Identifier Map` in spec
 
 ---
 

@@ -45,7 +45,13 @@ Raw product brief — may come from PM, UX, or Architect in any format.
    — extract key_elements from that AC's **Then** clauses (visible elements, text, buttons)
    — extract negative_checks from edge cases (what must NOT be visible)
    — if brief has NO View-layer requirements → write `## Visual Anchors: none`
-7. **Write output**: structured spec below
+7. **Localization pass**: extract every user-facing string from all AC `Then` clauses
+   — write `## Localization` section with key → English value table
+   — follow naming convention from `.agent/patterns/localization.md`
+8. **Accessibility pass**: for every screen in Visual Anchors, generate an identifier map
+   — write `## Accessibility Identifier Map` section
+   — follow naming convention from `.agent/patterns/accessibility.md`
+9. **Write output**: structured spec below
 
 ## Output → `output/<feature-slug>/01-spec.md`
 
@@ -108,6 +114,20 @@ Spacing: <list key spacing values, e.g. "pagePadding: 28, sectionGap: 40">
   negative_checks:
     - <element that must NOT be visible, e.g. "loading spinner on initial load">
     - <state that must NOT exist, e.g. "error message before user submits">
+
+## Localization
+<!-- Keys to add to Localizable.xcstrings for this feature -->
+| Key | English value |
+|---|---|
+| `action.<verb>` | <English label> |
+| `error.<domain>_<type>` | <English message> |
+| `screen.<name>_title` | <Screen title> |
+
+## Accessibility Identifier Map
+<!-- snake_case identifiers for every interactive element -->
+| Identifier | Element | Screen |
+|---|---|---|
+| `<screen>_<element>` | <UI element type> | <ViewName> |
 
 ## Ambiguities
 - [ ] <question — leave empty if none>

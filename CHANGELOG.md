@@ -5,6 +5,23 @@ Format: [version] — date — description
 
 ---
 
+## [0.6.0] — 2026-04-16
+
+### Added — Production Readiness Patterns
+- `network-layer.md` — NetworkClient, Endpoint, retry logic, MockNetworkClient
+- `error-handling.md` — AppError hierarchy, domain error mapping, Logger, retry UI
+- `localization.md` — String Catalog (iOS 17+), L10n helper, naming conventions
+- `accessibility.md` — Rules A-1 to A-6: labels, identifiers, Dynamic Type, VoiceOver
+- `cicd.md` — GitHub Actions CI + deploy workflows, Fastlane Fastfile + Matchfile
+
+### Changed
+- `01-spec-parser.md` — added Localization pass (Step 7) and Accessibility pass (Step 8)
+- `03-code-gen.md` — new patterns wired in, expanded Hard Prohibitions, expanded self-check
+- `05-reviewer.md` — added Localization and Accessibility checklists to per-file review
+- `CLAUDE.md` — new patterns in reference table, CI/CD standalone command
+
+---
+
 ## [0.5.0] — 2026-04-16
 
 ### Added

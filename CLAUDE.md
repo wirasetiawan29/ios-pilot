@@ -176,6 +176,10 @@ Gate D1: confidence LOW after 5+ files → STOP, ask user.
 | `.agent/patterns/complexity-classifier.md` | **Always first** — before Phase 1 |
 | `.agent/patterns/model-routing.md` | **Always** — every subagent spawn |
 | `.agent/patterns/navigation-rules.md` | Every View file (N-1 to N-6) |
+| `.agent/patterns/accessibility.md` | Every View file (A-1 to A-6 rules) |
+| `.agent/patterns/localization.md` | Every View file + Phase 1 spec |
+| `.agent/patterns/network-layer.md` | Every Repository / Service with network calls |
+| `.agent/patterns/error-handling.md` | Every file with async calls or error states |
 | `.agent/patterns/context-management.md` | Any file over 200 lines |
 | `.agent/patterns/self-validation.md` | Before saving any generated file |
 | `.agent/patterns/graceful-degradation.md` | When any parallel subagent fails |
@@ -185,6 +189,7 @@ Gate D1: confidence LOW after 5+ files → STOP, ask user.
 | `.agent/patterns/project-yml.md` | Creating or modifying project.yml |
 | `.agent/patterns/visual-verification.md` | Phase 3.6 — Visual Anchors present + build passed |
 | `.agent/patterns/git-integration.md` | Phase 5.5 — on user request only |
+| `.agent/patterns/cicd.md` | On user request — GitHub Actions + Fastlane setup |
 | `.agent/security-review.md` | Standalone or after Phase 5 — CRITICAL blocks MR |
 | `.agent/tech-debt.md` | Standalone or Phase 0 pre-brownfield baseline |
 
@@ -208,6 +213,7 @@ to find the last completed step. Do not re-run completed tasks.
 | "security review" / "scan security" | `.agent/security-review.md` |
 | "tech debt" / "scan debt" / "code quality" | `.agent/tech-debt.md` |
 | "create MR" / "open PR" / "push and create MR" | `.agent/patterns/git-integration.md` |
+| "setup ci" / "add ci/cd" / "github actions" / "fastlane" | `.agent/patterns/cicd.md` |
 
 ---
 

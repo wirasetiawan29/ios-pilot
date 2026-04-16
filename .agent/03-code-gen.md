@@ -11,6 +11,10 @@ and produces one file. It does not need to know about other parallel tasks.
 - `.agent/patterns/context-management.md` — for large dependency files
 - `.agent/patterns/graceful-degradation.md` — if this subagent cannot complete
 - `.agent/patterns/feedback-loop.md` — when called for a revision (REV-xx)
+- `.agent/patterns/network-layer.md` — for any Repository or Service that touches the network
+- `.agent/patterns/error-handling.md` — for any file with error states or async calls
+- `.agent/patterns/localization.md` — for every View file (no hardcoded strings)
+- `.agent/patterns/accessibility.md` — for every View file (A-1 to A-6 rules)
 
 ## Context Management
 See `.agent/patterns/context-management.md` for full protocol.
@@ -134,13 +138,18 @@ the reviewer can verify it exists before shipping.
 | ❌ | Reason |
 |---|---|
 | Force unwrap `!` | Crash |
-| `print()` | Log leak |
+| `print()` | Use `Logger` (see error-handling.md) |
 | `TODO` / `FIXME` | Incomplete |
 | `ObservableObject` | Use `@Observable` |
 | Business logic in View | Violates MVVM |
 | Missing `#Preview` in View file | No visual testability |
 | Hardcoded `Color(red:green:blue:)` in View | Use Theme tokens |
 | Hardcoded numeric font size in View | Use Theme tokens |
+| Raw English strings in `Text(…)` | Use `L10n.*` or `String(localized:)` |
+| `URLSession` in ViewModel | Use Service → Repository → NetworkClient |
+| `error.localizedDescription` shown to user | Map via `errorMessage(for:)` |
+| Missing `.accessibilityLabel` on interactive element | VoiceOver unusable |
+| Missing `.accessibilityIdentifier` on interactive element | UITest / visual check broken |
 
 ## Self-check before saving
 - [ ] File header written
@@ -148,6 +157,12 @@ the reviewer can verify it exists before shipping.
 - [ ] No items from Hard Prohibitions list
 - [ ] View files: `#Preview` block present at end of file
 - [ ] View files: all colors/fonts/spacing use Theme tokens, not raw values
+- [ ] View files: no hardcoded strings — all use `L10n.*` or `String(localized:)`
+- [ ] View files: all interactive elements have `.accessibilityLabel` + `.accessibilityIdentifier`
+- [ ] View files: decorative images have `.accessibilityHidden(true)`
+- [ ] Repository/Service files: uses `NetworkClientProtocol`, never `URLSession` directly
+- [ ] Repository files: maps `AppNetworkError` to domain errors
+- [ ] Files with error states: uses `Logger` not `print()`, maps errors via `errorMessage(for:)`
 - [ ] Image/Color asset references have `// ASSET-REQUIRED:` comment if asset is not an SF Symbol
 
 ---
