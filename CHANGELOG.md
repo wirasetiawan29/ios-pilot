@@ -5,7 +5,7 @@ Format: [version] — date — description
 
 ---
 
-## [1.1.0] — 2026-04-16
+## [0.4.0] — 2026-04-16
 
 ### Added
 - `examples/login-feature/` — golden examples: 01-spec.md, 02-tasks.md, LoginModels.swift, LoginViewModel.swift
@@ -18,7 +18,7 @@ Format: [version] — date — description
 
 ---
 
-## [1.0.0] — 2026-04-16
+## [0.3.0] — 2026-04-16
 
 First stable release. Four full pipelines, standalone commands, and production-ready patterns.
 
