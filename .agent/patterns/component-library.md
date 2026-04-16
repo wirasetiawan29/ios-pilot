@@ -7,6 +7,37 @@ Generated once as `TASK-CL` (Component Library), depended on by all View tasks.
 
 ---
 
+## Theme Token Integration
+
+Custom color tokens require **two extensions** in `Theme.swift` to work correctly in all contexts:
+
+```swift
+// 1. Direct usage: Color.appPrimary, Color.appError, etc.
+extension Color {
+    static let appPrimary = Color(hex: "#1A73E8")
+    static let appError   = Color(hex: "#D93025")
+    // … all tokens
+}
+
+// 2. Shorthand in foregroundStyle/background: .appPrimary, .appError, etc.
+extension ShapeStyle where Self == Color {
+    static var appPrimary: Color { .init(hex: "#1A73E8") }
+    static var appError:   Color { .init(hex: "#D93025") }
+    // … same tokens
+}
+```
+
+**Why both are needed:** `foregroundStyle(.appPrimary)` uses a generic `S: ShapeStyle` parameter.
+Swift cannot infer `S = Color` from an `extension Color` alone — it needs
+`extension ShapeStyle where Self == Color` to make the static member visible in that context.
+This is identical to how SwiftUI exposes `.red`, `.blue` etc. system colors.
+
+**Rule:** Every token added to `extension Color` must also appear in
+`extension ShapeStyle where Self == Color`. Missing one causes compile error:
+`type 'ShapeStyle' has no member 'appX'`.
+
+---
+
 ## Standard Components
 
 ### AppButton

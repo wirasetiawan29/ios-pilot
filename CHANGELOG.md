@@ -5,6 +5,16 @@ Format: [version] — date — description
 
 ---
 
+## [0.10.0] — 2026-04-16
+
+### Fixed — Gaps found during real compile test
+- `04-unit-test.md` — Default framework changed to XCTest (Xcode 15+); Swift Testing (`import Testing`) documented as Xcode 16+ only; added `@MainActor` rule for test class when ViewModel is `@MainActor @Observable`; added "Phase Completion" section: run `xcodebuild test` after generation, diagnose failures, one fix round, write `04-test-report.md`
+- `06-build-validator.md` — Added 2 patterns to Fix Catalogue: `@MainActor`-isolated property access in non-`@MainActor` View; `ShapeStyle has no member 'appX'` due to missing `extension ShapeStyle where Self == Color`
+- `component-library.md` — Added "Theme Token Integration" section explaining why both `extension Color` and `extension ShapeStyle where Self == Color` are required for shorthand color syntax
+- `CLAUDE.md` — Added Phase 4.1 (Test Run) to Pipeline A; split Phase 4→4.5 gate into 4→4.1 and 4.1→4.5 with test pass requirement; updated Target Stack to Swift 5.9+ / Xcode 15+
+
+---
+
 ## [0.9.0] — 2026-04-16
 
 ### Added — DX Improvements & Complete Reference Example

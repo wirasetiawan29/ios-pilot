@@ -85,6 +85,7 @@ See `.agent/patterns/model-routing.md` for full table. Quick reference:
                                        skip if no ## Visual Anchors in spec or build is 🚫
                                        ADVISORY — never blocks Phase 4
 [4]   Unit Tests        PARALLEL     — .agent/04-unit-test.md · one subagent per test file
+[4.1] Test Run          SEQUENTIAL   — xcodebuild test · all tests must pass · write 04-test-report.md
 [4.5] Revision Cycle    CONDITIONAL  — .agent/patterns/feedback-loop.md · only if revision-requests.md non-empty
 [5]   Review            PARALLEL→MERGE — .agent/05-reviewer.md
 [5.5] MR/PR Creation    OPTIONAL     — .agent/patterns/git-integration.md · only on user request
@@ -153,7 +154,8 @@ Gate D1: confidence LOW after 5+ files → STOP, ask user.
 | Phase 3→3.5 | All .swift files saved · no NavigationStack outside #Preview · no child navigationDestination |
 | Phase 3.5→3.6 | Build ✅ or ⚠️ · spec has `## Visual Anchors` (else skip) |
 | Phase 3.5→4 | Build ✅ or ⚠️ (no 🚫) |
-| Phase 4→4.5 | Check revision-requests.md — empty → skip 4.5 |
+| Phase 4→4.1 | All test files saved · no PENDING-REVISION |
+| Phase 4.1→4.5 | 04-test-report.md exists · all tests ✅ · Check revision-requests.md — empty → skip 4.5 |
 | Phase 5→PR | AC Coverage Table complete |
 | Phase 5→5.5 | User requested · 05-pr.md exists · working tree clean |
 | Phase 5.5 | No CRITICAL in security-report.md (if run) |
@@ -254,5 +256,5 @@ If `project.yml` exists → always run `xcodegen generate` before any `xcodebuil
 
 ## Target Stack
 
-| Swift 6 | SwiftUI iOS 17+ | MVVM + Clean Arch | `@Observable` | `async/await` | XCTest |
+| Swift 5.9+ | SwiftUI iOS 17+ | Xcode 15+ | MVVM + Clean Arch | `@Observable` | `async/await` | XCTest (Xcode 15) / Swift Testing (Xcode 16+) |
 |---|---|---|---|---|---|

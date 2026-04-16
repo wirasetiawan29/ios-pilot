@@ -200,6 +200,8 @@ Apply fixes in this priority order — stop at first match per error line:
 | `ObservableObject` used | Wrong pattern | Replace with `@Observable`, remove `@Published` wrappers |
 | `print(` in file | Hard rule violation | Replace with `Logger.<category>.debug(…)` |
 | Force unwrap `!` (non-comment line) | Hard rule violation | Replace with `guard let` or `if let` unwrap |
+| `main actor-isolated property .* can not be referenced from a non-isolated context` | View accesses `@MainActor @Observable` ViewModel but View struct is not `@MainActor` | Add `@MainActor` on the line immediately before `struct <Name>: View` |
+| `type 'ShapeStyle' has no member 'app.*'` | Custom Color token missing `ShapeStyle where Self == Color` extension — `.appX` shorthand unresolvable | Add `extension ShapeStyle where Self == Color { static var appX: Color { … } }` block to `Theme.swift` for each missing token |
 
 #### Auto-Fix Execution
 
