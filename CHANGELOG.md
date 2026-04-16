@@ -5,6 +5,21 @@ Format: [version] — date — description
 
 ---
 
+## [0.8.0] — 2026-04-16
+
+### Added — Remaining Production Gaps
+- `push-notifications.md` — APNS, permission flow, payload model, NotificationRouter
+- `analytics.md` — AnalyticsService protocol, Firebase/Debug providers, screen tracking, PII rules
+- `persistence.md` — SwiftData, ModelContainer, domain↔entity mapping, InMemoryRepository for tests
+- `feature-flags.md` — FeatureFlag enum, local/remote/composite service, migration gates
+- `deep-links.md` — DeepLinkParser, DeepLinkHandler, NavigationRouter, Universal Links + URL scheme
+- `crash-reporting.md` — Crashlytics, DebugReporter, user ID lifecycle, SPM setup
+
+### Changed
+- `CLAUDE.md` — 6 new patterns added to Patterns Reference
+
+---
+
 ## [0.7.0] — 2026-04-16
 
 ### Added

@@ -190,6 +190,12 @@ Gate D1: confidence LOW after 5+ files → STOP, ask user.
 | `.agent/patterns/project-yml.md` | Creating or modifying project.yml |
 | `.agent/patterns/visual-verification.md` | Phase 3.6 — Visual Anchors present + build passed |
 | `.agent/patterns/git-integration.md` | Phase 5.5 — on user request only |
+| `.agent/patterns/push-notifications.md` | When spec mentions push / APNS |
+| `.agent/patterns/analytics.md` | When spec mentions tracking / events |
+| `.agent/patterns/persistence.md` | When spec mentions offline / local data |
+| `.agent/patterns/feature-flags.md` | When spec mentions flags / A/B / migration gates |
+| `.agent/patterns/deep-links.md` | When spec mentions deep links / Universal Links |
+| `.agent/patterns/crash-reporting.md` | Every production feature |
 | `.agent/patterns/cicd.md` | On user request — GitHub Actions + Fastlane setup |
 | `.agent/security-review.md` | Standalone or after Phase 5 — CRITICAL blocks MR |
 | `.agent/tech-debt.md` | Standalone or Phase 0 pre-brownfield baseline |
