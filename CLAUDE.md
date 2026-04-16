@@ -178,6 +178,7 @@ Gate D1: confidence LOW after 5+ files → STOP, ask user.
 | `.agent/patterns/navigation-rules.md` | Every View file (N-1 to N-6) |
 | `.agent/patterns/accessibility.md` | Every View file (A-1 to A-6 rules) |
 | `.agent/patterns/localization.md` | Every View file + Phase 1 spec |
+| `.agent/patterns/secrets-management.md` | Any spec with API calls or authentication |
 | `.agent/patterns/network-layer.md` | Every Repository / Service with network calls |
 | `.agent/patterns/error-handling.md` | Every file with async calls or error states |
 | `.agent/patterns/context-management.md` | Any file over 200 lines |

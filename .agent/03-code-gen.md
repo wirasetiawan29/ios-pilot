@@ -11,6 +11,7 @@ and produces one file. It does not need to know about other parallel tasks.
 - `.agent/patterns/context-management.md` — for large dependency files
 - `.agent/patterns/graceful-degradation.md` — if this subagent cannot complete
 - `.agent/patterns/feedback-loop.md` — when called for a revision (REV-xx)
+- `.agent/patterns/secrets-management.md` — for any task involving API calls or authentication
 - `.agent/patterns/network-layer.md` — for any Repository or Service that touches the network
 - `.agent/patterns/error-handling.md` — for any file with error states or async calls
 - `.agent/patterns/localization.md` — for every View file (no hardcoded strings)
@@ -148,6 +149,8 @@ the reviewer can verify it exists before shipping.
 | Raw English strings in `Text(…)` | Use `L10n.*` or `String(localized:)` |
 | `URLSession` in ViewModel | Use Service → Repository → NetworkClient |
 | `error.localizedDescription` shown to user | Map via `errorMessage(for:)` |
+| Hardcoded base URL or API key in Swift | Use `AppConfiguration` + `.xcconfig` |
+| Auth token in `UserDefaults` | Use `KeychainHelper` |
 | Missing `.accessibilityLabel` on interactive element | VoiceOver unusable |
 | Missing `.accessibilityIdentifier` on interactive element | UITest / visual check broken |
 

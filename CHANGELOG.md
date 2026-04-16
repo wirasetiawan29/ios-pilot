@@ -5,6 +5,18 @@ Format: [version] — date — description
 
 ---
 
+## [0.7.0] — 2026-04-16
+
+### Added
+- `secrets-management.md` — `.xcconfig` per env, `AppConfiguration`, `KeychainHelper`, developer onboarding checklist
+
+### Changed
+- `03-code-gen.md` — hardcoded URL/key and UserDefaults token added to Hard Prohibitions
+- `05-reviewer.md` — Secrets & Configuration checklist added to per-file review
+- `CLAUDE.md` — `secrets-management` wired into Patterns Reference
+
+---
+
 ## [0.6.0] — 2026-04-16
 
 ### Added — Production Readiness Patterns

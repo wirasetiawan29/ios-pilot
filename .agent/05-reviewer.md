@@ -62,6 +62,12 @@ FINDINGS:
 - [ ] Protocol-based DI
 - [ ] Repository maps `AppNetworkError` to domain errors
 
+**Secrets & Configuration**
+- [ ] No hardcoded API keys, base URLs, or tokens in any Swift file
+- [ ] Base URL read via `AppConfiguration.current.baseURL`
+- [ ] Auth/refresh tokens stored in Keychain via `KeychainHelper`, not `UserDefaults`
+- [ ] `Configurations/*.local.xcconfig` present in `.gitignore`
+
 **Localization**
 - [ ] No hardcoded English strings in `Text(…)`, `Button(…)`, `.navigationTitle(…)`
 - [ ] All user-facing strings use `L10n.*` or `String(localized:)`
