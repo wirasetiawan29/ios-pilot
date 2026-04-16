@@ -144,3 +144,78 @@ becoming unreachable):
 | Method names + behavior summary | Method internals |
 | Error cases + edge case handling | Comments and documentation |
 | Dependencies and their usage | Import statements |
+
+---
+
+## Large Feature Protocol (> 8 tasks)
+
+When Phase 2 produces more than 8 tasks, activate Large Feature mode:
+
+### Before Phase 3 starts:
+1. Group tasks into waves (already done by Phase 2 dependency graph)
+2. Write wave manifest to `.state/wave-manifest.md`:
+
+```markdown
+# Wave Manifest: <Feature>
+
+## Wave 1 — Foundation (no deps)
+- TASK-01: LoginModels.swift
+- TASK-02: AuthServiceProtocol.swift
+
+## Wave 2 — Core (depends on wave 1)
+- TASK-03: LoginViewModel.swift
+- TASK-04: AuthRepository.swift
+
+## Wave 3 — UI (depends on wave 2)
+- TASK-05: LoginView.swift
+- TASK-06: RootView.swift
+
+## Wave 4 — Tests (depends on wave 3)
+- TASK-07: LoginViewModelTests.swift
+- TASK-08: AuthRepositoryTests.swift
+```
+
+### During Phase 3:
+- Load **only the current wave's tasks** into context at a time
+- After each wave completes: write wave checkpoint to `.state/phase3-progress.md`
+- Drop wave N context before loading wave N+1 — do not accumulate across waves
+
+### Context health check — before each wave:
+Before starting a new wave, verify you can still load the spec:
+```
+✓ I can read output/<feature-slug>/01-spec.md
+✓ I can see the relevant ACs for this wave's tasks
+✓ .state/wave-manifest.md is loaded
+```
+If spec is unreachable → save progress state immediately, request context reset.
+
+---
+
+## Token Budget Reference
+
+Rough guidance for how many files fit comfortably in one context pass:
+
+| File type | Avg lines | Files per pass |
+|---|---|---|
+| Models / Protocols | ~50 | 8–10 |
+| ViewModels | ~100 | 4–6 |
+| Views | ~150 | 3–4 |
+| Repositories | ~120 | 4–5 |
+| UIKit ViewControllers | ~400 | 1–2 |
+| Test files | ~200 | 3–4 |
+
+**Rule of thumb:** if the total lines of files in the current task exceed 800,
+use chunked extraction. Do not try to load all files at once.
+
+---
+
+## Context Pressure Signals
+
+You are approaching context limits when:
+- Earlier messages in the conversation become unreachable via scroll
+- You can no longer quote exact content from the spec you loaded earlier
+- Tool results from more than 3 steps ago are no longer visible
+- Your response starts truncating mid-sentence
+
+**On first signal:** save current progress state immediately. Do not wait until
+context is full — saving early costs nothing, losing state costs a full re-run.

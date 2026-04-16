@@ -99,14 +99,19 @@ Phase 3.5→4 requires build ✅ or ⚠️ (no 🚫).
 ## Pipeline B — Migration
 
 ```
-[M1] Discovery      PARALLEL → MERGE  — .agent/migration/m01-discovery.md
-[M2] Strategy       SEQUENTIAL        — .agent/migration/m02-strategy.md
-[M3] Component Map  PARALLEL → MERGE  — .agent/migration/m03-component-mapping.md
-[M4] Converter      PARALLEL          — .agent/migration/m04-converter.md
-[M5] Parity Check   PARALLEL → MERGE  — .agent/migration/m05-parity-checker.md
+[M1] Discovery       PARALLEL → MERGE  — .agent/migration/m01-discovery.md
+[M2] Strategy        SEQUENTIAL        — .agent/migration/m02-strategy.md
+[M3] Component Map   PARALLEL → MERGE  — .agent/migration/m03-component-mapping.md
+[M4] Converter       PARALLEL          — .agent/migration/m04-converter.md
+[M4.5] Build Validator SEQUENTIAL      — .agent/06-build-validator.md · converted code must compile
+[M5] Parity Check    PARALLEL → MERGE  — .agent/migration/m05-parity-checker.md
+[M5.1] Test Run      SEQUENTIAL        — xcodebuild test · parity tests must pass · write m05-test-report.md
 ```
 
-Gate M2: feature flag required → confirm with user before M4.
+Gates: M2→M3: coexistence plan written · feature flag confirmed by user.
+M4→M4.5: all converted files saved · MIGRATION annotation count matches header.
+M4.5→M5: build ✅ or ⚠️ (no 🚫).
+M5.1→merge: all parity tests ✅ · no BLOCKED verdict · all MIGRATION annotations resolved.
 
 ---
 
@@ -151,7 +156,7 @@ Gate D1: confidence LOW after 5+ files → STOP, ask user.
 | Phase 0→1 | `.state/project-context.md` exists |
 | Phase 1→2 | Ambiguities empty · Spec Checksum matches · `## Navigation Contract` present |
 | Phase 2→3 | Every task has unique path · all deps exist · View tasks quote Navigation Contract |
-| Phase 3→3.5 | All .swift files saved · no NavigationStack outside #Preview · no child navigationDestination |
+| Phase 3→3.5 | All .swift files saved · compliance-checker passes (no Hard Rule violations) · no NavigationStack outside #Preview · no child navigationDestination |
 | Phase 3.5→3.6 | Build ✅ or ⚠️ · spec has `## Visual Anchors` (else skip) |
 | Phase 3.5→4 | Build ✅ or ⚠️ (no 🚫) |
 | Phase 4→4.1 | All test files saved · no PENDING-REVISION |
@@ -164,6 +169,10 @@ Gate D1: confidence LOW after 5+ files → STOP, ask user.
 | B3→B4 | Patch log exists for every file in b02-impact.md |
 | B4→B5 | b04-build-report.md ✅ or ⚠️ |
 | B5→B6 | All UNCHANGED-TEST files have regression test |
+| M2→M3 | Coexistence plan written · feature flag approach confirmed by user |
+| M4→M4.5 | All converted files saved · MIGRATION annotation count matches each file header |
+| M4.5→M5 | Build ✅ or ⚠️ (no 🚫) |
+| M5.1→merge | All parity tests ✅ · no BLOCKED verdict · all MIGRATION annotations resolved |
 | D1→D2 | Root cause: specific file + line · confidence HIGH or MEDIUM |
 | D2→D3 | d02-fix-summary.md exists · // BUGFIX: in all changed lines |
 
@@ -185,6 +194,7 @@ Gate D1: confidence LOW after 5+ files → STOP, ask user.
 | `.agent/patterns/error-handling.md` | Every file with async calls or error states |
 | `.agent/patterns/context-management.md` | Any file over 200 lines |
 | `.agent/patterns/self-validation.md` | Before saving any generated file |
+| `.agent/patterns/compliance-checker.md` | After Phase 3 — grep-based Hard Rule verification before build |
 | `.agent/patterns/graceful-degradation.md` | When any parallel subagent fails |
 | `.agent/patterns/api-contract-verification.md` | Before calling any existing service |
 | `.agent/patterns/input-guard.md` | Phase 1, B1, M1 only |

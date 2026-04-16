@@ -5,6 +5,23 @@ Format: [version] — date — description
 
 ---
 
+## [0.11.0] — 2026-04-16
+
+### Added — Gap 3, 4, 5 Optimizations
+
+**Gap 3 — Pipeline B (Migration) strengthened:**
+- `m05-parity-checker.md` — switched from Swift Testing to XCTest (Xcode 15+), added `@MainActor` rule, added Phase Completion step: run `xcodebuild test` after parity test generation; BLOCKED verdict mandatory if any test fails
+- `CLAUDE.md` — added `[M4.5] Build Validator` and `[M5.1] Test Run` to Pipeline B; added explicit gates M2→M3, M4→M4.5, M4.5→M5, M5.1→merge to Phase Gate Validators table
+
+**Gap 4 — LLM non-determinism controlled:**
+- `compliance-checker.md` (new) — 11 grep-based Hard Rule checks; no LLM judgment; deterministic pass/fail per check; violations = [BLOCKER]; runs after Phase 3 before build; writes `compliance-report.md`; checks: no print(), no force unwrap, no hardcoded Color/font, NavigationStack only in root, no ObservableObject, no URLSession in ViewModel, no token in UserDefaults, no unresolved TODO, every View has #Preview, no raw error.localizedDescription
+- `CLAUDE.md` — Phase 3→3.5 gate updated: compliance-checker must pass; compliance-checker added to Patterns Reference
+
+**Gap 5 — Context management strengthened:**
+- `context-management.md` — added Large Feature Protocol (>8 tasks): wave manifest, per-wave context loading, wave checkpoint writing; added Token Budget Reference table (lines per file type, files per pass); added Context Pressure Signals section with early-save triggers
+
+---
+
 ## [0.10.0] — 2026-04-16
 
 ### Fixed — Gaps found during real compile test

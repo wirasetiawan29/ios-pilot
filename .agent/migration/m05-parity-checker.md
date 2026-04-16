@@ -35,28 +35,30 @@ On context reset: load progress, resume from next pending component.
 
 ### Part 1 → `output/<feature-slug>/m05-tests/<feature>/<Name>ParityTests.swift`
 
+**Framework:** XCTest by default (Xcode 15+). Swift Testing only if `project.yml` specifies `xcodeVersion: "16.0"` or higher.
+
 ```swift
-import Testing
+import XCTest
 @testable import AppModule
 
-// Suite name references the ORIGINAL class — regressions are traceable
-@Suite("<NewViewModel> — Parity: <OriginalViewController>")
-struct LoginViewModelParityTests {
+// Class name references ORIGINAL UIKit class — regressions are traceable
+@MainActor   // add if ViewModel is @MainActor @Observable
+final class LoginViewModelParityTests: XCTestCase {
 
     // MARK: - Parity: viewDidLoad
-    @Test("initial state matches original viewDidLoad")
     func test_initialState_matchesOriginalViewDidLoad() {
         let sut = LoginViewModel(authService: MockAuthService())
-        #expect(sut.isLoginEnabled == false)
+        XCTAssertFalse(sut.isLoginEnabled,
+            "Button should start disabled — matches original viewDidLoad")
     }
 
     // MARK: - Parity: fieldsChanged IBAction
-    @Test("button enabled when both fields filled — matches original IBAction")
     func test_isLoginEnabled_bothFilled_returnsTrue() {
         let sut = LoginViewModel(authService: MockAuthService())
         sut.email = "a@b.com"
         sut.password = "pass"
-        #expect(sut.isLoginEnabled == true)
+        XCTAssertTrue(sut.isLoginEnabled,
+            "Button enabled when both fields filled — matches original fieldsChanged IBAction")
     }
 }
 ```
@@ -100,7 +102,35 @@ Orchestrator consolidates all blocks into:
 
 **Blocked if**: any unresolved `// MIGRATION:` annotation OR unapproved behavioral difference.
 
+## Phase Completion — Run Parity Tests
+
+After all parity test files are saved, run `xcodebuild test` before writing the final parity report:
+
+```bash
+xcodebuild test \
+  -project output/<feature-slug>/03-code/<AppName>.xcodeproj \
+  -scheme <AppName> \
+  -destination "platform=iOS Simulator,name=iPhone 16" \
+  CODE_SIGNING_ALLOWED=NO \
+  2>&1 | grep -E "Test Case|passed|failed|BUILD"
+```
+
+If any parity test **fails**: the SwiftUI conversion does not faithfully reproduce the original UIKit behavior. Treat as a regression — fix the ViewModel or View before proceeding to merge.
+
+Write test results into the parity report under a `## Test Run` section:
+```markdown
+## Test Run
+| Test | Result |
+|---|---|
+| test_initialState_matchesOriginalViewDidLoad | ✅ |
+| test_isLoginEnabled_bothFilled_returnsTrue | ✅ |
+```
+
+A BLOCKED verdict is **mandatory** if any parity test fails.
+
 ## Rules
 - Test names reference original UIKit method (`viewDidLoad`, `didSelectRowAt`, etc.)
+- `@MainActor` on test class when ViewModel is `@MainActor @Observable`
 - Every `// MIGRATION:` annotation → Manual Verification Required table
 - Intentional diffs need architect sign-off before merge
+- Test run must complete before parity report is finalized
