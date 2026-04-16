@@ -2,47 +2,39 @@
 
 **Agentic iOS development pipeline — from brief to PR-ready Swift code, entirely inside Claude Code.**
 
-No Python. No separate API key. No extra tooling beyond Xcode.
+No Python. No separate API key. No extra tooling beyond Xcode and `xcodegen`.
+
+![Version](https://img.shields.io/badge/version-0.11.0-blue)
+![Swift](https://img.shields.io/badge/Swift-5.9%2B-orange)
+![iOS](https://img.shields.io/badge/iOS-17%2B-lightgrey)
+![Xcode](https://img.shields.io/badge/Xcode-15%2B-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
 
 ---
 
-## What is this?
+## What is ios-pilot?
 
-ios-pilot is a multi-agent pipeline that orchestrates Claude Code subagents to build, migrate, patch, and debug iOS apps. You describe what you want — the pipeline handles spec parsing, code generation, build validation, unit tests, and review automatically.
-
-Each pipeline runs in **Plan Mode first**: the agent shows you exactly what it will do before touching a single file.
-
----
-
-## Pipelines
-
-### A — Greenfield
-> New feature or app from a product brief
+ios-pilot is a **CLAUDE.md-driven multi-agent pipeline** that lives entirely inside Claude Code. You describe what you want — the pipeline handles everything else: spec parsing, task breakdown, parallel code generation, build validation, compliance checking, unit tests, and PR review.
 
 ```
-brief → spec → task graph → code (parallel waves) → build check → visual check → tests → review → PR
+You:   "plan: add a push notification opt-in screen with permission flow and fallback"
+Agent: [shows plan with phases, files to be created, and risks]
+You:   "yes"
+Agent: [runs all phases, produces PR-ready Swift code]
 ```
 
-### B — Migration
-> UIKit → SwiftUI, component by component
+Every pipeline run starts in **Plan Mode** — the agent shows exactly what it will do before touching a single file. You approve, then it runs.
 
-```
-UIKit code → discovery → strategy → component map → converted SwiftUI → parity tests
-```
+### Why ios-pilot?
 
-### C — Brownfield
-> Change request on an existing iOS project
-
-```
-delta spec → impact analysis (NEW/MODIFY/DELETE/RIPPLE) → surgical patch → build validation → regression tests → review
-```
-
-### D — Bugfix
-> Crash log or bug report → root cause → fix → validated
-
-```
-crash/report → RCA (exact file + line) → surgical fix → build + regression test
-```
+| Without ios-pilot | With ios-pilot |
+|---|---|
+| Write spec in Notion, copy-paste to Claude manually | Brief → structured spec automatically |
+| Manually manage file dependencies | Wave-based dependency graph, automatic |
+| Forget to write tests | Tests generated and **run** as part of the pipeline |
+| Build fails after code gen | Build validator catches errors before tests start |
+| Review done by eye | Automated review with BLOCKER / WARNING / SUGGESTION |
+| Context resets lose work | State files persist every phase — auto-resume |
 
 ---
 
@@ -52,13 +44,8 @@ crash/report → RCA (exact file + line) → surgical fix → build + regression
 curl -fsSL https://raw.githubusercontent.com/wirasetiawan29/ios-pilot/main/install.sh | bash
 ```
 
-The script will:
-- Check for Claude Code, Xcode, and Homebrew
-- Install `xcodegen` if missing
-- Clone ios-pilot to `~/ios-pilot`
-- Print next steps
+The installer checks for Claude Code, Xcode, and Homebrew, installs `xcodegen`, and clones ios-pilot to `~/ios-pilot`. Then open it in Claude Code:
 
-Then open the folder in Claude Code:
 ```bash
 claude ~/ios-pilot
 ```
@@ -67,23 +54,23 @@ claude ~/ios-pilot
 
 ## Quickstart
 
-### Option A — Sandbox (no Xcode project needed)
+### Sandbox Mode — no Xcode project needed
 
-Open this folder in Claude Code and describe what you want:
+Open the folder in Claude Code and describe what you want:
 
 ```
-plan: build a login screen with email/password, Remember Me toggle, and biometric fallback
+plan: build a login screen with email/password, error handling, and loading state
 ```
 
-The agent shows a plan. Approve to run:
+The agent shows a plan. Approve with:
 
 ```
 yes
 ```
 
-Output goes to `output/<feature-slug>/`.
+Output goes to `output/<feature-slug>/`. Includes a `project.yml` so you can open it in Xcode immediately.
 
-### Option B — Project Mode (writes to your Xcode project)
+### Project Mode — writes directly to your app
 
 Place your Xcode project inside this folder:
 
@@ -102,161 +89,245 @@ Then point the agent at it:
 project: MyApp — add push notification permission flow
 ```
 
-The agent reads your codebase first (Phase 0 — Codebase Reader), then picks the right pipeline automatically.
+The agent reads your codebase first (Phase 0 — Codebase Reader), detects the right pipeline, and proceeds.
 
 ---
 
-## How it works
+## Pipelines
 
-Every pipeline run goes through three automatic steps before Phase 1:
+ios-pilot auto-detects which pipeline fits your request. You can also name it explicitly.
 
-| Step | What happens |
-|---|---|
-| Complexity check | Scores your request SIMPLE / COMPLEX to pick the right model and skip unnecessary phases |
-| Model routing | Assigns Opus for reasoning, Sonnet for code gen, Haiku for boilerplate — automatically |
-| Parallelism | Independent tasks spawn in parallel waves; the orchestrator waits for each wave before continuing |
+### A — Greenfield
+> New feature or screen from a product brief
 
-Human gates stop the pipeline at key decision points — unresolved ambiguities, risky file deletions, feature flag decisions — so you stay in control.
+```
+Brief → Spec → Task Graph → Code Gen (parallel waves)
+     → Compliance Check → Build → Visual Check → Tests → Test Run → Review → PR
+```
 
-If the context resets mid-run, the pipeline resumes from the last completed step by reading `.state/<phase>-progress.md`. No work is lost and no phase is re-run.
+### B — Migration
+> UIKit → SwiftUI, component by component
+
+```
+UIKit Code → Discovery → Strategy → Component Map
+          → Converter (parallel) → Build → Parity Tests → Test Run → Merge
+```
+
+### C — Brownfield
+> Change request on an existing iOS project
+
+```
+Delta Spec → Impact Analysis (NEW/MODIFY/DELETE/RIPPLE)
+          → Surgical Patch → Build → Regression Tests → Review
+```
+
+### D — Bugfix
+> Crash log or bug report → root cause → fix → validated
+
+```
+Crash / Report → RCA (exact file + line) → Surgical Fix → Build + Regression Test
+```
 
 ---
 
-## Phase Overview
+## Phase Details
 
 ### Pipeline A — Greenfield
 
-| Phase | Agent | Output |
+| Phase | Agent | What it produces |
 |---|---|---|
 | 0 | Codebase Reader | `.state/project-context.md` — conventions, existing infra (cached 30 days) |
-| 1 | Spec Parser | `01-spec.md` — structured spec, ambiguity gate, Navigation Contract |
-| 2 | Task Breakdown | `02-tasks.md` — dependency graph + wave plan |
-| 3 | Code Gen | `03-code/**/*.swift` — parallel waves |
-| 3.5 | Build Validator | `06-build-report.md` — real `xcodegen` + `xcodebuild` typecheck |
-| 3.6 | Visual Check | Screenshots + AI analysis against spec — advisory, never blocks |
-| 4 | Unit Tests | `04-tests/**/*.swift` — one subagent per file, parallel |
+| 1 | Spec Parser | `01-spec.md` — structured spec, Navigation Contract, Visual Anchors, a11y IDs |
+| 2 | Task Breakdown | `02-tasks.md` — dependency graph, wave plan, TASK-CL for component library |
+| 3 | Code Gen | `03-code/**/*.swift` — parallel waves, navigation rules enforced |
+| 3.0 | Compliance Checker | `compliance-report.md` — 11 grep-based Hard Rule checks before build |
+| 3.5 | Build Validator | `06-build-report.md` — `xcodegen` + `xcodebuild`, 2-round auto-fix loop |
+| 3.6 | Visual Check | Screenshots + AI vs spec — advisory, never blocks |
+| 4 | Unit Tests | `04-tests/**/*.swift` — one subagent per ViewModel, parallel |
+| 4.1 | Test Run | `xcodebuild test` — all tests must pass before proceeding |
 | 4.5 | Revision Cycle | Targeted re-gen for untestable ViewModels (conditional) |
-| 5 | Review | `05-pr.md` — BLOCKER / WARNING / SUGGESTION |
-| 5.5 | MR/PR | GitHub / GitLab — on request only |
+| 5 | Review | `05-pr.md` — BLOCKER / WARNING / SUGGESTION per file |
+| 5.5 | PR / MR | GitHub / GitLab — on request only |
+
+**Key gates:**
+- Phase 1→2 requires Navigation Contract present and zero unresolved ambiguities
+- Phase 3→3.5 requires compliance checker to pass (no Hard Rule violations)
+- Phase 3.5→4 requires build ✅ or ⚠️ (no compile errors)
+- Phase 4.1→4.5 requires all tests pass
 
 ### Pipeline B — Migration
 
-| Phase | Agent | Output |
+| Phase | Agent | What it produces |
 |---|---|---|
-| M1 | Discovery | `m01-discovery.md` — behavior map of UIKit screens |
-| M2 | Strategy | `m02-strategy.md` — approach per component, feature flag gate |
-| M3 | Component Mapping | `m03-mapping.md` — UIKit → SwiftUI API map |
-| M4 | Converter | `m04-converted/**/*.swift` — navigation rules enforced |
-| M5 | Parity Checker | `m05-tests/` + `m05-parity-report.md` |
+| M1 | Discovery | `m01-discovery.md` — behavior map, UIKit API inventory, risk flags |
+| M2 | Strategy | `m02-strategy.md` — Full Rewrite / Incremental / Strangler Fig per component |
+| M3 | Component Map | `m03-mapping.md` — UIKit → SwiftUI API translation table |
+| M4 | Converter | `m04-converted/**/*.swift` — `// MIGRATION:` annotations, navigation rules |
+| M4.5 | Build Validator | Converted code must compile before parity tests start |
+| M5 | Parity Checker | `m05-tests/` + `m05-parity-report.md` — behavior-level regression tests |
+| M5.1 | Test Run | All parity tests must pass — BLOCKED verdict if any fail |
+
+**Key gates:**
+- M2→M3 requires feature flag strategy confirmed by user
+- M4→M4.5 requires all `// MIGRATION:` annotation counts to match file headers
+- M4.5→M5 requires build ✅ or ⚠️
+- M5.1→merge requires all parity tests pass and all `// MIGRATION:` annotations resolved
 
 ### Pipeline C — Brownfield
 
-| Phase | Agent | Output |
+| Phase | Agent | What it produces |
 |---|---|---|
-| 0 | Codebase Reader | Mandatory — always refreshes if >30 days old |
-| B1 | Delta Spec | `b01-delta-spec.md` — what changes only, not the whole feature |
+| 0 | Codebase Reader | Mandatory — refreshes if >30 days old |
+| B1 | Delta Spec | `b01-delta-spec.md` — what changes only, not a full spec rewrite |
 | B2 | Impact Analysis | `b02-impact.md` — NEW / MODIFY / DELETE / RIPPLE per file |
 | B3 | Code Patch | Surgical edits, wave-ordered, RIPPLE-tagged |
 | B4 | Patch Validator | `b04-build-report.md` — full `xcodebuild` with baseline check |
 | B5 | Regression Tests | NEW + RIPPLE + UNCHANGED-TEST scopes |
 | B6 | Review | Parallel per file → merged PR description |
 
-Gates: B1 requires zero unresolved ambiguities. B2 DELETE files must be confirmed by user before B3 runs.
+Gates: B1 zero ambiguities. B2 DELETE files confirmed by user before B3 runs.
 
 ### Pipeline D — Bugfix
 
-| Phase | Agent | Output |
+| Phase | Agent | What it produces |
 |---|---|---|
 | 0 | Codebase Reader | Mandatory |
 | D1 | RCA | `d01-rca.md` — root cause to exact file + line (Opus) |
 | D2 | Fix Gen | Surgical fix, every changed line tagged `// BUGFIX:` |
 | D3 | Fix Validator | Build + regression test that fails before fix, passes after |
 
-Gate D1: if confidence stays LOW after reading 5+ files → pipeline stops and asks for more information. A guess is never written as a fix.
+Gate D1: confidence stays LOW after 5+ files → pipeline stops and asks for more information. A guess is never written as a fix.
 
 ---
 
-## Visual Verification (Phase 3.6)
+## How the Pipeline Thinks
 
-After a successful build, the pipeline can optionally boot a simulator, run XCUITest screenshots, and use AI to compare each screen against the spec requirements.
+### Complexity Scoring
+Before Phase 1, the pipeline scores your request as **SIMPLE** (< 40 points) or **COMPLEX** (≥ 40). Simple features skip heavyweight phases and use faster models.
 
-This phase is **advisory** — results are warnings, never blockers. Pipeline always continues to Phase 4 regardless of outcome.
+### Model Routing
+Every subagent spawn picks a model based on the task:
 
-Runs automatically when `01-spec.md` contains a `## Visual Anchors` section. If the section is missing, Phase 3.6 is skipped silently. Results flow into the Phase 5 review as `## Visual Check` in the PR description.
+| Task type | Model |
+|---|---|
+| Spec reasoning, RCA, architectural decisions | Opus |
+| Code gen (non-ViewModel), review, orchestration | Sonnet |
+| Test gen, file writing, boilerplate | Haiku |
+
+### Parallel Waves
+Phase 3 Code Gen uses a dependency graph to group tasks into waves. Independent tasks in the same wave run as parallel subagents. The orchestrator waits for each wave to complete before starting the next.
+
+### State Resumption
+If the context resets mid-run, the pipeline reads `.state/<phase>-progress.md` and resumes from the last completed step. No phase is re-run.
 
 ---
 
-## Navigation Rules (N-1 to N-6)
+## Compliance Checker
 
-Every generated View file is checked against six hard navigation rules. Violations are treated as build errors and must be fixed before Phase 4.
+After code generation and before the build, the compliance checker runs 11 grep-based checks against every generated Swift file. These checks do not rely on LLM judgment — each one is a shell command with a deterministic pass/fail result.
+
+| Check | Rule enforced |
+|---|---|
+| C-1 | No `print()` calls — use `Logger` from `os.log` |
+| C-2 | No force unwraps `!` — use `guard let` / `if let` |
+| C-3 | No hardcoded `Color(red:)` — use Theme tokens |
+| C-4 | No hardcoded font sizes — use `.appTitle`, `.appBody` etc. |
+| C-5 | `NavigationStack` only in root view (N-1) |
+| C-6 | No `ObservableObject` / `@Published` — use `@Observable` |
+| C-7 | `URLSession` only in Repository/Service files, never in ViewModel |
+| C-8 | No auth token in `UserDefaults` — use `KeychainHelper` |
+| C-9 | No unresolved `// TODO:` in generated code |
+| C-10 | Every View file has a `#Preview` block |
+| C-11 | No `error.localizedDescription` assigned directly to UI |
+
+Any violation = `[BLOCKER]`. The build step does not start until all violations are resolved.
+
+---
+
+## Navigation Rules
+
+Every generated View is checked against 6 hard navigation rules enforced by both the compliance checker and the build validator.
 
 | Rule | Requirement |
 |---|---|
-| N-1 | `NavigationStack` appears exactly once, inside `RootView` only |
-| N-2 | All `navigationDestination(for:)` modifiers declared at the root, never in child views |
-| N-3 | No-back-button flows (Onboarding, Login) use `.fullScreenCover`, never a push |
-| N-4 | Modally presented views receive `@Binding` for dismissal, not internal `@State` |
-| N-5 | `01-spec.md` must contain a `## Navigation Contract` before Code Gen starts |
-| N-6 | Every View agent prompt must include the Navigation Contract |
+| N-1 | `NavigationStack` appears exactly once — inside `RootView` only |
+| N-2 | All `navigationDestination(for:)` declared at root, never in child views |
+| N-3 | No-back-button flows (Login, Onboarding) use `.fullScreenCover` not push |
+| N-4 | Modal views receive `@Binding` for dismissal — not internal `@State` |
+| N-5 | `01-spec.md` must contain a `## Navigation Contract` before Code Gen |
+| N-6 | Every View agent prompt must quote the Navigation Contract |
 
 ---
 
-## Patterns
+## Production Patterns
 
-14 shared patterns run automatically at the right phase. Key ones:
+30 shared patterns run automatically at the right phase. Patterns cover every production concern:
 
-| Pattern | When it runs |
-|---|---|
-| `complexity-classifier` | Before every pipeline — determines SIMPLE vs COMPLEX |
-| `model-routing` | Every subagent spawn — assigns Opus / Sonnet / Haiku |
-| `navigation-rules` | Every View file (N-1 to N-6 enforcement) |
-| `self-validation` | Before saving any generated file |
-| `visual-verification` | Phase 3.6 — when Visual Anchors are present |
-| `graceful-degradation` | When any parallel subagent fails — pipeline continues where it can |
-| `context-management` | Any file over 200 lines — prevents context overflow |
-| `api-contract-verification` | Before calling any existing service |
-| `design-tokens` | Phase 1 — when brief describes colors, fonts, or images |
-| `feedback-loop` | Phase 4.5 — targeted revision if tests expose untestable ViewModels |
-| `git-integration` | Phase 5.5 — push + create MR/PR on request |
+**Architecture & Code Quality**
+`complexity-classifier` · `model-routing` · `navigation-rules` · `self-validation` · `compliance-checker` · `context-management` · `graceful-degradation` · `feedback-loop` · `api-contract-verification`
+
+**UI & Design**
+`component-library` · `design-tokens` · `accessibility` · `visual-verification`
+
+**Networking & Data**
+`network-layer` · `error-handling` · `persistence` · `secrets-management`
+
+**Platform**
+`push-notifications` · `deep-links` · `feature-flags` · `analytics` · `crash-reporting` · `localization`
+
+**Infrastructure**
+`cicd` · `git-integration` · `git-safety` · `project-yml` · `pipeline-detector` · `context-restore` · `input-guard`
+
+---
+
+## Component Library
+
+Every generated View uses standard components from `AppButton`, `AppTextField`, `AppSecureField`, `AppCard`, `AppLoadingOverlay`, `AppErrorBanner`, and `AppEmptyState` — ensuring visual consistency without hardcoded SwiftUI primitives.
 
 ---
 
 ## Standalone Commands
 
-Run individual agents on demand without a full pipeline:
+Run individual agents without a full pipeline:
 
 | Say this | What runs |
 |---|---|
+| `status` / `where am i` | Shows current pipeline, phase, progress, and exact next step |
+| `help` | Context-aware help — adapts output to active pipeline and phase |
 | `security review` | 10-point iOS security scan: Keychain, ATS, hardcoded secrets, biometric flow |
 | `tech debt` | 9-category Swift debt report: force unwrap, `@MainActor` misuse, `ObservableObject` leftovers |
-| `create MR` / `open PR` | Push branch and create a GitHub / GitLab MR with a generated description |
-
----
-
-## Hard Rules
-
-These rules are enforced across every pipeline. Generated code that violates them will not be saved.
-
-- No force unwrap (`!`)
-- No `print()` statements
-- No unresolved `TODO` comments
-- Every generated View must include a `#Preview` block
-- No hardcoded `Color(red:green:blue:)` or numeric font sizes — use Theme tokens
-- Image/Color assets that are not SF Symbols get a `// ASSET-REQUIRED:` comment
-- `// MIGRATION:` annotations flow through to the parity report
-- Navigation rules N-1 to N-6 are enforced on every View file
+| `create MR` / `open PR` | Push branch + create GitHub / GitLab MR with generated description |
+| `setup ci` | GitHub Actions CI + deploy workflows + Fastlane Fastfile |
 
 ---
 
 ## Examples
 
-`examples/login-feature/` contains a complete golden example:
-- `01-spec.md` — parsed spec with Navigation Contract and Visual Anchors
-- `02-tasks.md` — dependency graph and wave plan
-- `03-code/Features/Login/LoginModels.swift` — generated models
-- `03-code/Features/Login/LoginViewModel.swift` — generated ViewModel
+`examples/login-feature/` contains a complete golden example — fully compilable and tested:
 
-Use these as a reference for what each phase produces.
+```
+examples/login-feature/
+├── 01-spec.md                          ← structured spec with Navigation Contract
+├── 02-tasks.md                         ← dependency graph and wave plan
+└── 03-code/                            ← compilable Xcode project
+    ├── project.yml
+    ├── Sources/
+    │   ├── App/
+    │   │   ├── LoginExampleApp.swift
+    │   │   └── RootView.swift          ← NavigationStack owner (N-1)
+    │   ├── DesignSystem/
+    │   │   └── Theme.swift             ← Color, Font, Spacing tokens
+    │   └── Features/Login/
+    │       ├── LoginModels.swift        ← LoginCredentials, AuthSession, AuthError
+    │       ├── LoginViewModel.swift     ← @Observable @MainActor
+    │       ├── LoginView.swift          ← fullScreenCover (N-3), a11y IDs
+    │       ├── AuthServiceProtocol.swift
+    │       └── AuthRepository.swift    ← URLSession, Keychain, 30s timeout
+    └── Tests/Features/Login/
+        └── LoginViewModelTests.swift   ← 15 tests, all AC coverage, XCTest
+```
+
+**Build and test verified:** `xcodebuild build` ✅ · `xcodebuild test` ✅ 15/15 passed on iPhone 15 Pro simulator.
 
 ---
 
@@ -265,20 +336,40 @@ Use these as a reference for what each phase produces.
 | Tool | Purpose | Install |
 |---|---|---|
 | Claude Code | Runs the pipeline | [claude.ai/code](https://claude.ai/code) |
-| Xcode | Build + validate | Mac App Store |
+| Xcode 15+ | Build + validate | Mac App Store |
 | `xcodegen` | Generate `.xcodeproj` from `project.yml` | `brew install xcodegen` |
-| `gh` / `glab` | PR / MR creation | `brew install gh` or `brew install glab` |
+| `gh` / `glab` | PR / MR creation (optional) | `brew install gh` |
 
-`xcodegen` is only required if your project uses `project.yml`. If it's missing, the pipeline flags it under Risks in the plan report.
-
----
-
-## Stack
-
-Swift 6 · SwiftUI · iOS 17+ · MVVM + Clean Architecture · `@Observable` · `async/await` · XCTest
+`xcodegen` is only required in Sandbox Mode. If missing, the pipeline flags it under Risks in the plan report.
 
 ---
 
-## Changelog
+## Target Stack
 
-See [CHANGELOG.md](CHANGELOG.md).
+| | |
+|---|---|
+| **Language** | Swift 5.9+ |
+| **UI** | SwiftUI iOS 17+ |
+| **Architecture** | MVVM + Clean Architecture |
+| **State** | `@Observable` (not `ObservableObject`) |
+| **Concurrency** | `async/await` |
+| **Tests** | XCTest (Xcode 15+) · Swift Testing (Xcode 16+) |
+| **Build** | xcodegen + xcodebuild |
+| **CI/CD** | GitHub Actions + Fastlane |
+
+---
+
+## Version History
+
+See [CHANGELOG.md](CHANGELOG.md) for full history.
+
+| Version | Highlights |
+|---|---|
+| 0.11.0 | Compliance checker (11 grep checks), Pipeline B gates + test run, Large Feature Protocol |
+| 0.10.0 | Phase 4.1 test run, ShapeStyle/`@MainActor` in Fix Catalogue, Xcode 15+ target stack |
+| 0.9.0 | Component library, 14-pattern auto-fix loop, complete compilable login example |
+| 0.8.0 | Push notifications, analytics, persistence, feature flags, deep links, crash reporting |
+| 0.7.0 | Secrets management: xcconfig, AppConfiguration, KeychainHelper |
+| 0.6.0 | Network layer, error handling, localization, accessibility, CI/CD |
+| 0.5.0 | Status/help commands, pipeline detector, context restore |
+| 0.3.0 | Four full pipelines, security review, tech debt scan |
