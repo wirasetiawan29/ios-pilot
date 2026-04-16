@@ -4,15 +4,14 @@
 // Depends on: LoginViewModel.swift, LoginModels.swift
 // ============================================================
 
-import Testing
+import XCTest
 import Foundation
 @testable import LoginExample
 
 // MARK: - Test Suite
 
-@Suite("LoginViewModel")
 @MainActor
-struct LoginViewModelTests {
+final class LoginViewModelTests: XCTestCase {
 
     // MARK: - Helpers
 
@@ -24,46 +23,40 @@ struct LoginViewModelTests {
 
     // MARK: - AC-4: Empty field validation
 
-    @Test("Sign In button disabled when both fields empty")
-    func signInDisabledWhenFieldsEmpty() {
+    func test_signInDisabledWhenFieldsEmpty() {
         let sut = makeSUT()
-        #expect(sut.isLoginEnabled == false)
+        XCTAssertFalse(sut.isLoginEnabled)
     }
 
-    @Test("Sign In button disabled when email is empty")
-    func signInDisabledWhenEmailEmpty() {
+    func test_signInDisabledWhenEmailEmpty() {
         let sut = makeSUT()
         sut.password = "password123"
-        #expect(sut.isLoginEnabled == false)
+        XCTAssertFalse(sut.isLoginEnabled)
     }
 
-    @Test("Sign In button disabled when password is empty")
-    func signInDisabledWhenPasswordEmpty() {
+    func test_signInDisabledWhenPasswordEmpty() {
         let sut = makeSUT()
         sut.email = "user@example.com"
-        #expect(sut.isLoginEnabled == false)
+        XCTAssertFalse(sut.isLoginEnabled)
     }
 
-    @Test("Sign In button enabled when both fields filled")
-    func signInEnabledWhenBothFieldsFilled() {
+    func test_signInEnabledWhenBothFieldsFilled() {
         let sut = makeSUT()
         sut.email = "user@example.com"
         sut.password = "password123"
-        #expect(sut.isLoginEnabled == true)
+        XCTAssertTrue(sut.isLoginEnabled)
     }
 
-    @Test("Sign In button disabled when only whitespace in email")
-    func signInDisabledWhenEmailIsWhitespace() {
+    func test_signInDisabledWhenEmailIsWhitespace() {
         let sut = makeSUT()
         sut.email = "   "
         sut.password = "password123"
-        #expect(sut.isLoginEnabled == false)
+        XCTAssertFalse(sut.isLoginEnabled)
     }
 
     // MARK: - AC-1: Successful login
 
-    @Test("Login success sets isAuthenticated")
-    func loginSuccessSetsAuthenticated() async {
+    func test_loginSuccessSetsAuthenticated() async {
         let sut = makeSUT(authService: MockAuthService(result: .success(AuthSession(
             userId: "user-1",
             token: "token-abc",
@@ -74,12 +67,11 @@ struct LoginViewModelTests {
 
         await sut.login()
 
-        #expect(sut.isAuthenticated == true)
-        #expect(sut.errorMessage == nil)
+        XCTAssertTrue(sut.isAuthenticated)
+        XCTAssertNil(sut.errorMessage)
     }
 
-    @Test("Login trims whitespace from email before calling service")
-    func loginTrimsEmailWhitespace() async {
+    func test_loginTrimsEmailWhitespace() async {
         let mockService = MockAuthService(result: .success(AuthSession(
             userId: "1", token: "t", expiresAt: Date().addingTimeInterval(3600)
         )))
@@ -89,78 +81,72 @@ struct LoginViewModelTests {
 
         await sut.login()
 
-        #expect(mockService.lastCredentials?.email == "user@example.com")
+        XCTAssertEqual(mockService.lastCredentials?.email, "user@example.com")
     }
 
     // MARK: - AC-2: Invalid credentials
 
-    @Test("Login failure shows error message")
-    func loginFailureShowsError() async {
+    func test_loginFailureShowsError() async {
         let sut = makeSUT(authService: MockAuthService(result: .failure(.invalidCredentials)))
         sut.email = "user@example.com"
         sut.password = "wrongpassword"
 
         await sut.login()
 
-        #expect(sut.isAuthenticated == false)
-        #expect(sut.errorMessage != nil)
-        #expect(sut.errorMessage == AuthError.invalidCredentials.errorDescription)
+        XCTAssertFalse(sut.isAuthenticated)
+        XCTAssertNotNil(sut.errorMessage)
+        XCTAssertEqual(sut.errorMessage, AuthError.invalidCredentials.errorDescription)
     }
 
-    @Test("Login failure clears password field")
-    func loginFailureClearsPassword() async {
+    func test_loginFailureClearsPassword() async {
         let sut = makeSUT(authService: MockAuthService(result: .failure(.invalidCredentials)))
         sut.email = "user@example.com"
         sut.password = "wrongpassword"
 
         await sut.login()
 
-        #expect(sut.password == "")
+        XCTAssertEqual(sut.password, "")
     }
 
-    @Test("Error message cleared when user starts typing email")
-    func errorClearedOnEmailInput() async {
+    func test_errorClearedOnEmailInput() async {
         let sut = makeSUT(authService: MockAuthService(result: .failure(.invalidCredentials)))
         sut.email = "user@example.com"
         sut.password = "wrong"
 
         await sut.login()
-        #expect(sut.errorMessage != nil)
+        XCTAssertNotNil(sut.errorMessage)
 
         sut.email = "new@example.com"
-        #expect(sut.errorMessage == nil)
+        XCTAssertNil(sut.errorMessage)
     }
 
-    @Test("Error message cleared when user starts typing password")
-    func errorClearedOnPasswordInput() async {
+    func test_errorClearedOnPasswordInput() async {
         let sut = makeSUT(authService: MockAuthService(result: .failure(.invalidCredentials)))
         sut.email = "user@example.com"
         sut.password = "wrong"
 
         await sut.login()
-        #expect(sut.errorMessage != nil)
+        XCTAssertNotNil(sut.errorMessage)
 
         sut.password = "newpassword"
-        #expect(sut.errorMessage == nil)
+        XCTAssertNil(sut.errorMessage)
     }
 
     // MARK: - AC-3: Loading state
 
-    @Test("isLoading is false before and after login")
-    func loadingStateResetsAfterLogin() async {
+    func test_loadingStateResetsAfterLogin() async {
         let sut = makeSUT(authService: MockAuthService(result: .success(AuthSession(
             userId: "1", token: "t", expiresAt: Date().addingTimeInterval(3600)
         ))))
         sut.email = "user@example.com"
         sut.password = "password"
 
-        #expect(sut.isLoading == false)
+        XCTAssertFalse(sut.isLoading)
         await sut.login()
-        #expect(sut.isLoading == false)
+        XCTAssertFalse(sut.isLoading)
     }
 
-    @Test("Sign In button disabled while loading")
-    func signInDisabledWhileLoading() async {
+    func test_signInDisabledWhileLoading() async {
         let sut = makeSUT(authService: MockAuthService(result: .success(AuthSession(
             userId: "1", token: "t", expiresAt: Date().addingTimeInterval(3600)
         ))))
@@ -172,32 +158,30 @@ struct LoginViewModelTests {
         // Note: testing isLoading=true mid-flight requires async interception;
         // this test verifies isLoading resets after completion
         await task.value
-        #expect(sut.isLoading == false)
+        XCTAssertFalse(sut.isLoading)
     }
 
     // MARK: - AC-5: Network error
 
-    @Test("Network unavailable shows correct error message")
-    func networkUnavailableShowsError() async {
+    func test_networkUnavailableShowsError() async {
         let sut = makeSUT(authService: MockAuthService(result: .failure(.networkUnavailable)))
         sut.email = "user@example.com"
         sut.password = "password"
 
         await sut.login()
 
-        #expect(sut.errorMessage == AuthError.networkUnavailable.errorDescription)
-        #expect(sut.isAuthenticated == false)
+        XCTAssertEqual(sut.errorMessage, AuthError.networkUnavailable.errorDescription)
+        XCTAssertFalse(sut.isAuthenticated)
     }
 
-    @Test("Timeout shows correct error message")
-    func timeoutShowsError() async {
+    func test_timeoutShowsError() async {
         let sut = makeSUT(authService: MockAuthService(result: .failure(.timeout)))
         sut.email = "user@example.com"
         sut.password = "password"
 
         await sut.login()
 
-        #expect(sut.errorMessage == AuthError.timeout.errorDescription)
+        XCTAssertEqual(sut.errorMessage, AuthError.timeout.errorDescription)
     }
 }
 

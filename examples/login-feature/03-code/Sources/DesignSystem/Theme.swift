@@ -16,6 +16,18 @@ extension Color {
     static let appBorder   = Color(uiColor: .separator)
 }
 
+// MARK: - ShapeStyle shorthand (enables `.appPrimary` in foregroundStyle/background)
+
+extension ShapeStyle where Self == Color {
+    static var appPrimary: Color { Color(hex: "#1A73E8") }
+    static var appSurface: Color { Color(hex: "#FFFFFF") }
+    static var appError:   Color { Color(hex: "#D93025") }
+    static var appSubtle:  Color { Color(hex: "#5F6368") }
+    static var appBorder:  Color { Color(uiColor: .separator) }
+}
+
+// MARK: - Hex init (internal to file)
+
 private extension Color {
     init(hex: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)

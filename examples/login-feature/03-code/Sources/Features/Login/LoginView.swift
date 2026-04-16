@@ -11,6 +11,7 @@ import SwiftUI
 /// Presented as a fullScreenCover by RootView (Rule N-3).
 /// Dismissed via @Binding when login succeeds (Rule N-4).
 /// No NavigationStack inside this view (Rule N-1).
+@MainActor
 struct LoginView: View {
 
     // MARK: - Dependencies
