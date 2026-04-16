@@ -5,6 +5,19 @@ Format: [version] — date — description
 
 ---
 
+## [0.5.0] — 2026-04-16
+
+### Added
+- `status` command — shows current pipeline phase, task progress, and exact next step
+- `help` command — context-aware help that adapts to active pipeline and phase
+- `pipeline-detector` pattern — auto-detects Greenfield/Brownfield/Bugfix/Migration from user input
+- `context-restore` pattern — auto-restores in-progress pipeline state at session start
+
+### Changed
+- `CLAUDE.md` — wired session start (context restore), pipeline detector, and new commands
+
+---
+
 ## [0.4.0] — 2026-04-16
 
 ### Added

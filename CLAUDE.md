@@ -15,19 +15,32 @@ Project Mode requires: git-safety check → branch creation → Phase 0 (Codebas
 
 ---
 
+## Session Start
+
+**Every new session:** Run `.agent/patterns/context-restore.md` before responding to the first message.
+Show restore banner if an in-progress pipeline is found. Then proceed normally.
+
+---
+
 ## Intent Detection
 
 | User says | Action |
 |---|---|
 | "plan", "dry run", "what will you do" | Plan Mode → show report, wait for approval |
 | "yes", "run", "proceed", "go" after a plan | Execute the approved plan |
-| Anything else (brief, file path, feature request) | Plan Mode first, then wait |
+| "status", "where am i", "progress", "resume" | `.agent/commands/status.md` — read-only |
+| "help", "what can you do", "commands", "?" | `.agent/commands/help.md` — context-aware |
+| Anything else (brief, file path, feature request) | Auto-detect pipeline → Plan Mode first, then wait |
 
 **Default is always Plan Mode first.** See `.agent/plan-mode.md` for report format.
 
 ---
 
 ## Pipeline Selection
+
+Run `.agent/patterns/pipeline-detector.md` on every new user input (not a known command).
+It scores signals in the input and selects the right pipeline automatically.
+Only ask the user to clarify if the top two pipelines score within 1 point of each other.
 
 | Input | Pipeline |
 |---|---|
@@ -158,6 +171,8 @@ Gate D1: confidence LOW after 5+ files → STOP, ask user.
 
 | Pattern | When |
 |---|---|
+| `.agent/patterns/context-restore.md` | **Session start** — before first response |
+| `.agent/patterns/pipeline-detector.md` | **Every new input** — auto-select pipeline |
 | `.agent/patterns/complexity-classifier.md` | **Always first** — before Phase 1 |
 | `.agent/patterns/model-routing.md` | **Always** — every subagent spawn |
 | `.agent/patterns/navigation-rules.md` | Every View file (N-1 to N-6) |
@@ -188,6 +203,8 @@ to find the last completed step. Do not re-run completed tasks.
 
 | User says | Agent |
 |---|---|
+| "status" / "where am i" / "progress" / "resume" | `.agent/commands/status.md` |
+| "help" / "what can you do" / "commands" / "?" | `.agent/commands/help.md` |
 | "security review" / "scan security" | `.agent/security-review.md` |
 | "tech debt" / "scan debt" / "code quality" | `.agent/tech-debt.md` |
 | "create MR" / "open PR" / "push and create MR" | `.agent/patterns/git-integration.md` |
