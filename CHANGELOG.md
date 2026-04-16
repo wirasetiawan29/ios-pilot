@@ -5,6 +5,18 @@ Format: [version] — date — description
 
 ---
 
+## [0.9.0] — 2026-04-16
+
+### Added — DX Improvements & Complete Reference Example
+- `component-library.md` — AppButton (4 styles), AppTextField/AppSecureField (show/hide toggle), AppCard, AppLoadingOverlay modifier, AppErrorBanner (with retry), AppEmptyState; TASK-CL wave rules for code gen
+- `examples/login-feature/03-code/` — fully compilable Login feature: project.yml, Info.plist, App entry, RootView, Theme, AuthServiceProtocol, AuthRepository, LoginView, LoginViewModel, LoginModels, 15 unit tests (Swift Testing framework) covering all 5 ACs
+
+### Changed
+- `06-build-validator.md` — auto-fix loop expanded to 14-pattern Fix Catalogue (typo, missing import, wrong method/init, unused expression, unnecessary await, wrong enum case, N-1/N-2 violations, missing #Preview, ObservableObject→@Observable, print→Logger, force unwrap→guard let); 2 rounds max with explicit stop conditions
+- `CLAUDE.md` — `component-library.md` added to Patterns Reference
+
+---
+
 ## [0.8.0] — 2026-04-16
 
 ### Added — Remaining Production Gaps

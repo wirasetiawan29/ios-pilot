@@ -173,19 +173,62 @@ Group errors by file. Ignore notes.
 
 ---
 
-### Step 4 — Attempt Auto-Fix (for common errors only)
+### Step 4 — Auto-Fix Loop (max 2 rounds)
 
-Auto-fix these patterns without human intervention:
+Run up to **2 auto-fix rounds**. Each round: scan errors → apply fixes → rebuild.
+If errors remain after round 2 → stop, report as 🚫, wait for human.
 
-| Error pattern | Auto-fix |
-|---|---|
-| `use of unresolved identifier 'X'` where X is a typo of a known type | Correct the typo in the source file |
-| Missing `import Foundation` | Add import at top of file |
-| `cannot find type 'X' in scope` where X is in another generated file | Check if file dependency was written correctly |
+**Round tracking:** Log each round in `06-build-report.md` under `## Auto-Fix Log`.
 
-For everything else → log as finding, do not attempt auto-fix.
+#### Fix Catalogue
 
-After auto-fixing: re-run `swiftc -typecheck`. One retry only.
+Apply fixes in this priority order — stop at first match per error line:
+
+| Error pattern | Diagnosis | Auto-fix |
+|---|---|---|
+| `use of unresolved identifier 'X'` | Typo or wrong name | Grep all generated files for closest match, replace |
+| `cannot find type 'X' in scope` | Missing import or file | Add `import Foundation` / `import SwiftUI` / `import Observation` at top of file |
+| `cannot find 'X' in scope` where X is a protocol | Protocol file not included | Verify file exists in `03-code/`; add to project.yml sources if missing |
+| `value of type 'X' has no member 'Y'` | Wrong method name | Check protocol definition, rename call to match |
+| `initializer 'init(...)' requires...` | Missing required init arg | Read the type's init signature, add missing argument with a sensible default |
+| `expression of type 'X' is unused` | Missing `_` or `try` | Prefix with `_ = ` or wrap in `try` as appropriate |
+| `no 'async' operations occur within 'await'` | Unnecessary await | Remove `await` keyword |
+| `'X' is not a member of type 'Y'` | Wrong enum case name | Check enum definition, correct the case name |
+| `NavigationStack` in non-root view | Rule N-1 violation | Remove `NavigationStack`, replace content with plain `VStack` |
+| `navigationDestination` in child view | Rule N-2 violation | Move modifier to RootView, add `// AUTO-FIXED: moved navigationDestination to root` |
+| Missing `#Preview` at end of View file | Hard rule violation | Append minimal `#Preview { <ViewName>() }` block |
+| `ObservableObject` used | Wrong pattern | Replace with `@Observable`, remove `@Published` wrappers |
+| `print(` in file | Hard rule violation | Replace with `Logger.<category>.debug(…)` |
+| Force unwrap `!` (non-comment line) | Hard rule violation | Replace with `guard let` or `if let` unwrap |
+
+#### Auto-Fix Execution
+
+```
+For each [BLOCKER] error in current build output:
+  1. Identify the file and line number
+  2. Match error to Fix Catalogue above
+  3. If match found:
+     a. Apply fix to the file
+     b. Log: "Round N fix: <file>:<line> — <error pattern> → <fix applied>"
+  4. If no match: mark as UNRESOLVED, skip
+
+After all fixes applied:
+  Re-run build (same xcodebuild command as Step 2)
+  If Build succeeded → done ✅
+  If still errors AND round < 2 → start Round 2
+  If still errors AND round == 2 → stop, report 🚫 UNRESOLVED
+```
+
+#### What Auto-Fix Will NOT Touch
+
+- Business logic changes (wrong algorithm, missing AC implementation)
+- Data model restructuring
+- API contract mismatches (wrong response type from server)
+- Missing asset files (`// ASSET-REQUIRED:` comments)
+- SPM package resolution failures
+- Code signing issues
+
+These require human judgment → always reported as 🚫 with specific diagnosis.
 
 ---
 

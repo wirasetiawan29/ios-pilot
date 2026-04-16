@@ -196,6 +196,7 @@ Gate D1: confidence LOW after 5+ files → STOP, ask user.
 | `.agent/patterns/feature-flags.md` | When spec mentions flags / A/B / migration gates |
 | `.agent/patterns/deep-links.md` | When spec mentions deep links / Universal Links |
 | `.agent/patterns/crash-reporting.md` | Every production feature |
+| `.agent/patterns/component-library.md` | Every View file — use AppButton, AppTextField, AppCard, AppLoadingOverlay, AppErrorBanner |
 | `.agent/patterns/cicd.md` | On user request — GitHub Actions + Fastlane setup |
 | `.agent/security-review.md` | Standalone or after Phase 5 — CRITICAL blocks MR |
 | `.agent/tech-debt.md` | Standalone or Phase 0 pre-brownfield baseline |
