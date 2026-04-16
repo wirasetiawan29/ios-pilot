@@ -46,6 +46,25 @@ crash/report → RCA (exact file + line) → surgical fix → build + regression
 
 ---
 
+## Installation
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/wirasetiawan29/ios-pilot/main/install.sh | bash
+```
+
+The script will:
+- Check for Claude Code, Xcode, and Homebrew
+- Install `xcodegen` if missing
+- Clone ios-pilot to `~/ios-pilot`
+- Print next steps
+
+Then open the folder in Claude Code:
+```bash
+claude ~/ios-pilot
+```
+
+---
+
 ## Quickstart
 
 ### Option A — Sandbox (no Xcode project needed)
