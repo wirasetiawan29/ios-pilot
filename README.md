@@ -45,7 +45,7 @@ Every pipeline run starts in **Plan Mode** — the agent shows exactly what it w
 curl -fsSL https://raw.githubusercontent.com/wirasetiawan29/ios-pilot/main/install.sh | bash
 ```
 
-The installer clones ios-pilot to `~/ios-pilot`, installs `xcodegen`, and adds the `ios-pilot` command to your PATH. After installation, **restart your terminal** (or run `source ~/.zshrc`).
+The installer clones ios-pilot to `~/ios-pilot`, installs `xcodegen`, and adds an `ios-pilot` alias to your shell. After installation, run `source ~/.zshrc` (or restart your terminal).
 
 ---
 

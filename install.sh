@@ -99,40 +99,28 @@ fi
 INSTALLED_VERSION=$(cat "$INSTALL_DIR/VERSION" 2>/dev/null || echo "unknown")
 print_ok "Version: $INSTALLED_VERSION"
 
-# ── 8. Install ios-pilot CLI command ─────────────────
-print_step "Installing ios-pilot command"
+# ── 8. Add ios-pilot alias ───────────────────────────
+print_step "Adding ios-pilot command"
 
-BIN_DIR="$HOME/.local/bin"
-mkdir -p "$BIN_DIR"
+ALIAS_LINE="alias ios-pilot='claude $INSTALL_DIR'"
 
-ln -sfn "$INSTALL_DIR/bin/ios-pilot" "$BIN_DIR/ios-pilot"
-print_ok "Linked: ios-pilot → $BIN_DIR/ios-pilot"
-
-# Add ~/.local/bin to PATH if not already there
-_add_to_path() {
+_add_alias() {
   local rc_file="$1"
-  local line='export PATH="$HOME/.local/bin:$PATH"'
-  if [ -f "$rc_file" ] && ! grep -q '.local/bin' "$rc_file"; then
+  if [ -f "$rc_file" ] && ! grep -q 'alias ios-pilot' "$rc_file"; then
     echo "" >> "$rc_file"
     echo "# ios-pilot" >> "$rc_file"
-    echo "$line" >> "$rc_file"
-    print_ok "Added ~/.local/bin to PATH in $rc_file"
+    echo "$ALIAS_LINE" >> "$rc_file"
+    print_ok "Added alias to $rc_file"
   fi
 }
 
 if [[ "$SHELL" == */zsh ]]; then
-  _add_to_path "$HOME/.zshrc"
+  _add_alias "$HOME/.zshrc"
 elif [[ "$SHELL" == */bash ]]; then
-  _add_to_path "$HOME/.bash_profile"
-  _add_to_path "$HOME/.bashrc"
+  _add_alias "$HOME/.bash_profile"
 fi
 
-# Verify command is reachable
-if command -v ios-pilot &>/dev/null || [ -x "$BIN_DIR/ios-pilot" ]; then
-  print_ok "Command ready: ios-pilot"
-else
-  print_warn "Run: source ~/.zshrc (or restart terminal) to activate ios-pilot command"
-fi
+print_ok "Command ready: ios-pilot"
 
 # ── 9. Done ──────────────────────────────────────────
 echo ""
@@ -141,19 +129,14 @@ echo -e "${GREEN}${BOLD}ios-pilot installed successfully!${NC}"
 echo ""
 echo -e "${BOLD}Usage:${NC}"
 echo ""
-echo "  Sandbox Mode — from anywhere:"
-echo "  ${BOLD}ios-pilot${NC}"
+echo "  1. Reload your shell:"
+echo "     ${BOLD}source ~/.zshrc${NC}"
 echo ""
-echo "  Project Mode — from your Xcode project:"
-echo "  ${BOLD}cd ~/Projects/MyApp && ios-pilot${NC}"
-echo "  → Project auto-linked. Tell Claude: project: MyApp"
+echo "  2. Then from anywhere:"
+echo "     ${BOLD}ios-pilot${NC}"
 echo ""
-echo "  Other commands:"
-echo "  ios-pilot update    — pull latest version"
-echo "  ios-pilot doctor    — check environment"
-echo "  ios-pilot version   — show installed version"
+echo "  For your existing iOS project:"
+echo "     ${BOLD}ios-pilot${NC}  (then tell Claude: project: ~/Projects/MyApp)"
 echo ""
 echo "  Docs: https://github.com/wirasetiawan29/ios-pilot"
-echo ""
-echo -e "${YELLOW}Tip:${NC} If 'ios-pilot' is not found, run: source ~/.zshrc"
 echo ""
