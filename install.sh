@@ -102,15 +102,30 @@ print_ok "Version: $INSTALLED_VERSION"
 # ── 8. Add ios-pilot alias ───────────────────────────
 print_step "Adding ios-pilot command"
 
-ALIAS_LINE="alias ios-pilot='claude $INSTALL_DIR'"
-
 _add_alias() {
   local rc_file="$1"
-  if [ -f "$rc_file" ] && ! grep -q 'alias ios-pilot' "$rc_file"; then
-    echo "" >> "$rc_file"
-    echo "# ios-pilot" >> "$rc_file"
-    echo "$ALIAS_LINE" >> "$rc_file"
-    print_ok "Added alias to $rc_file"
+  if [ -f "$rc_file" ] && ! grep -q 'ios-pilot()' "$rc_file"; then
+    cat >> "$rc_file" << EOF
+
+# ios-pilot
+ios-pilot() {
+  local dir="\${IOS_PILOT_HOME:-$INSTALL_DIR}"
+  case "\${1:-}" in
+    update)   git -C "\$dir" pull --ff-only origin main ;;
+    doctor)   "\$dir/pilot" doctor ;;
+    version)  cat "\$dir/VERSION" ;;
+    --project)
+      local project_path="\${2:?Usage: ios-pilot --project <path>}"
+      local project_name=\$(basename "\$project_path")
+      ln -sfn "\$(realpath "\$project_path")" "\$dir/\$project_name"
+      echo "Linked: \$project_name"
+      echo "In Claude, say: project: \$project_name"
+      claude "\$dir" ;;
+    *)  claude "\$dir" ;;
+  esac
+}
+EOF
+    print_ok "Added ios-pilot function to $rc_file"
   fi
 }
 
