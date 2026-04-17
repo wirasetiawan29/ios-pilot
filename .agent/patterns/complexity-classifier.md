@@ -84,7 +84,7 @@ When SIMPLE, apply these shortcuts (all others run normally):
 ```
 Phase 0  — skip if greenfield, run if project mode (always needed)
 Phase 1  — Spec Parser uses Sonnet for both reasoning AND writing (no two-pass)
-Phase 2  — Task Breakdown: skip dependency graph visualization, just list tasks
+Phase 2  — Task Breakdown: skip dependency graph visualization, just list tasks · Sonnet for reasoning (not Opus)
 Phase 3  — run tasks sequentially if ≤3 tasks, parallel waves only if >3 tasks
 Phase 5  — Review: single-pass consolidation (no per-file subagents if ≤3 files)
 ```

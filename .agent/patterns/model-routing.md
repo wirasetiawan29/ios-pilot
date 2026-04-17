@@ -24,7 +24,8 @@ Every subagent spawn MUST specify a model based on this table.
 | Phase 0 | Codebase Reader | Sonnet | Read + summarize, moderate reasoning |
 | Phase 1 | Spec reasoning (gap analysis, ambiguities) | Opus | Architectural judgment required |
 | Phase 1 | Spec file writing (01-spec.md) | Haiku | Structured template output |
-| Phase 2 | Task breakdown reasoning (dependency graph) | Opus | Dependency logic, risk assessment |
+| Phase 2 | Task breakdown reasoning — COMPLEX score | Opus | Deep dependency graph, cross-layer risk assessment |
+| Phase 2 | Task breakdown reasoning — SIMPLE score | Sonnet | Small task set (≤ 6 tasks) — dependency logic within Sonnet capability |
 | Phase 2 | Task list file writing (02-tasks.md) | Haiku | Structured list output |
 | Phase 3 | Code Gen — Model, Protocol | Sonnet | Pattern-following, low reasoning |
 | Phase 3 | Code Gen — Repository, Service | Sonnet | API contract following |

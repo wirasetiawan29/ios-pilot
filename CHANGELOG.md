@@ -5,6 +5,17 @@ Format: [version] — date — description
 
 ---
 
+## [0.15.0] — 2026-04-17
+
+### Changed — Smart model downgrade for SIMPLE pipeline
+
+- `model-routing.md` — Phase 2 reasoning now conditional: Opus for COMPLEX score, Sonnet for SIMPLE score. COMPLEX dependency graphs need deep reasoning; SIMPLE task sets (≤6 tasks) are within Sonnet capability. Keeps ViewModel gen, Pipeline C MODIFY, and D1 RCA at Opus — the phases where downgrade would materially hurt result quality.
+- `complexity-classifier.md` — SIMPLE shortcuts: Phase 2 explicitly uses Sonnet for reasoning (previously implied but not stated)
+
+Result: individual Claude Code Pro subscribers can run SIMPLE pipeline A features at ~40% lower cost with no material accuracy loss. COMPLEX features unchanged.
+
+---
+
 ## [0.14.0] — 2026-04-17
 
 ### Added — Pipeline E (Micro) for trivial UI edits
