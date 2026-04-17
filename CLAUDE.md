@@ -60,6 +60,7 @@ G2 and G3 only apply in Project Mode. G5 only applies to Pipeline C and D.
 | "yes", "run", "proceed", "go" after a plan | Execute the approved plan |
 | "status", "where am i", "progress", "resume" | `.agent/commands/status.md` — read-only |
 | "help", "what can you do", "commands", "?" | `.agent/commands/help.md` — context-aware |
+| "submit learnings" / "send learnings" | `.agent/commands/submit-learnings.md` |
 | Anything else (brief, file path, feature request) | Auto-detect pipeline → Plan Mode first, then wait |
 
 ---
@@ -116,6 +117,7 @@ See `.agent/patterns/model-routing.md` for full table. Quick reference:
 [4.5] Revision Cycle    CONDITIONAL  — .agent/patterns/feedback-loop.md · only if revision-requests.md non-empty
 [5]   Review            PARALLEL→MERGE — .agent/05-reviewer.md
 [5.5] MR/PR Creation    OPTIONAL     — .agent/patterns/git-integration.md · only on user request
+[L]   Learning Collector ADVISORY    — .agent/patterns/learning-collector.md · after pipeline · non-blocking
 ```
 
 Gates: Phase 1→2 requires empty Ambiguities + Navigation Contract present.
@@ -133,6 +135,7 @@ Phase 3.5→4 requires build ✅ or ⚠️ (no 🚫).
 [M4.5] Build Validator SEQUENTIAL      — .agent/06-build-validator.md · converted code must compile
 [M5] Parity Check    PARALLEL → MERGE  — .agent/migration/m05-parity-checker.md
 [M5.1] Test Run      SEQUENTIAL        — xcodebuild test · parity tests must pass · write m05-test-report.md
+[L]    Learning Collector ADVISORY     — .agent/patterns/learning-collector.md · after pipeline · non-blocking
 ```
 
 Gates: M1→M2: discovery complete · every component in change request has entry · tech debt baseline saved.
@@ -156,6 +159,7 @@ Project Mode mandatory. Codebase Reader always runs.
 [B4] Patch Validator   SEQUENTIAL   — .agent/brownfield/b04-patch-validator.md · full xcodebuild
 [B5] Regression Tests  PARALLEL     — .agent/brownfield/b05-regression-tests.md
 [B6] Review            PARALLEL→MERGE
+[L]  Learning Collector ADVISORY       — .agent/patterns/learning-collector.md · after pipeline · non-blocking
 ```
 
 Gates: B0→B1: baseline report written. B1 Ambiguities empty. B2 DELETE files confirmed by user. B4 build ✅ or ⚠️.
@@ -171,6 +175,7 @@ Project Mode mandatory. No spec phase.
 [D1] RCA              SEQUENTIAL  — .agent/bugfix/d01-rca.md · Opus · exact file + line
 [D2] Fix Gen          SEQUENTIAL  — .agent/bugfix/d02-fix-gen.md · surgical, // BUGFIX: tagged
 [D3] Fix Validator    SEQUENTIAL  — .agent/bugfix/d03-fix-validator.md · build + regression test
+[L]  Learning Collector ADVISORY  — .agent/patterns/learning-collector.md · after pipeline · non-blocking
 ```
 
 Gate D1: confidence LOW after 5+ files → STOP, ask user.
@@ -202,6 +207,7 @@ Also includes: state file recovery protocol for missing or corrupted `.state/` f
 | `.agent/patterns/context-management.md` | Any file over 200 lines |
 | `.agent/patterns/self-validation.md` | Before saving any generated file |
 | `.agent/patterns/compliance-checker.md` | After Phase 3 — grep-based Hard Rule verification before build |
+| `.agent/patterns/learning-collector.md` | After every pipeline completes — advisory, non-blocking |
 | `.agent/patterns/graceful-degradation.md` | When any parallel subagent fails |
 | `.agent/patterns/api-contract-verification.md` | Before calling any existing service |
 | `.agent/patterns/input-guard.md` | Phase 1, B1, M1 only |
@@ -242,6 +248,7 @@ to find the last completed step. Do not re-run completed tasks.
 | "tech debt" / "scan debt" / "code quality" | `.agent/tech-debt.md` |
 | "create MR" / "open PR" / "push and create MR" | `.agent/patterns/git-integration.md` |
 | "setup ci" / "add ci/cd" / "github actions" / "fastlane" | `.agent/patterns/cicd.md` |
+| "submit learnings" / "send learnings" | `.agent/commands/submit-learnings.md` |
 
 ---
 

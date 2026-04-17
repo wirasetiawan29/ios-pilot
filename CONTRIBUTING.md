@@ -108,3 +108,47 @@ Update `VERSION` and `CHANGELOG.md` for every change. Format:
 - **Self-check must be a checkbox list** — each item must be independently verifiable
 - **Code examples must be complete** — no `// ... rest of implementation`
 - **Hard rules must be grep-verifiable** — if you add a rule, add its grep command to `.agent/patterns/compliance-checker.md`
+
+---
+
+## Learning Submissions
+
+The `learning-collector` pattern runs automatically after every pipeline and extracts reusable
+patterns from build errors, compliance violations, and revision cycles. Users can submit
+these as a draft PR to improve ios-pilot itself.
+
+### As a pipeline user
+
+1. After a pipeline completes, read `output/<slug>/.state/learnings.md`
+2. Review HIGH and MEDIUM entries — confirm they describe generic patterns, not your project
+3. Say "submit learnings" to create a draft PR
+4. Share the PR URL with the ios-pilot maintainer
+
+### Privacy requirements (mandatory)
+
+Every learning must pass the privacy filter before submission:
+- No Swift class or method names from your project
+- No project-specific file paths or directory names
+- No string literals from your codebase
+- No bundle IDs or feature-specific identifiers
+
+The `submit-learnings` command re-verifies this before pushing. If it flags an entry,
+either strip it manually or exclude that learning from the PR.
+
+### As a maintainer reviewing a learning PR
+
+Learning PRs are always draft. Before approving:
+
+1. Confirm every Fix Catalogue addition has a real xcodebuild error pattern (copy-pasteable)
+2. Confirm every compliance check addition has a working grep command
+3. Confirm no project-specific identifiers slipped through the privacy filter
+4. Run any new grep command against `examples/login-feature/` — must not false-positive
+5. Check that new Fix Catalogue rows follow the exact column format of existing rows
+
+Merge only after all checklist items pass. Use "Squash and merge" to keep history clean.
+
+### What NOT to submit
+
+- LOW confidence learnings (single-occurrence) — keep them in `.state/learnings.md` locally
+- Build failures caused by your project's own non-standard setup
+- Learnings that cannot be expressed as a generic, grep-verifiable rule

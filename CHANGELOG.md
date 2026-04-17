@@ -5,6 +5,17 @@ Format: [version] — date — description
 
 ---
 
+## [0.13.0] — 2026-04-17
+
+### Added — Semi-autonomous learning system
+
+- `.agent/patterns/learning-collector.md` (new) — Haiku agent runs after every pipeline completes; reads build/compliance/test/revision/PR reports; applies mandatory privacy filter (strips class/method names, project paths, string literals); scores HIGH/MEDIUM/LOW confidence; writes `output/<slug>/.state/learnings.md`; never blocks the pipeline
+- `.agent/commands/submit-learnings.md` (new) — user-triggered command: re-verifies privacy filter; requires explicit "yes" before any git action; creates `learning/<slug>-<YYYY-MM-DD>` branch; patches `.agent/` files (Fix Catalogue rows, compliance checks); commits + pushes; opens draft PR via `gh pr create --draft`
+- `CLAUDE.md` — `learning-collector.md` added to Patterns Reference; "submit learnings" added to Intent Detection and Standalone Commands tables; `[L] Learning Collector ADVISORY` step added to all 4 pipelines (A, B, C, D)
+- `CONTRIBUTING.md` — "Learning Submissions" section: user workflow, privacy requirements, maintainer review checklist, what not to submit
+
+---
+
 ## [0.12.0] — 2026-04-17
 
 ### Changed — Model routing fixes, gate extraction, contributor tooling
