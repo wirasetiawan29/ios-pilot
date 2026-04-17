@@ -4,7 +4,7 @@
 
 No Python. No separate API key. No extra tooling beyond Xcode and `xcodegen`.
 
-![Version](https://img.shields.io/badge/version-0.14.0-blue)
+![Version](https://img.shields.io/badge/version-0.15.0-blue)
 ![Swift](https://img.shields.io/badge/Swift-5.9%2B-orange)
 ![iOS](https://img.shields.io/badge/iOS-17%2B-lightgrey)
 ![Xcode](https://img.shields.io/badge/Xcode-15%2B-blue)
@@ -254,6 +254,8 @@ Every subagent spawn picks a model based on the task:
 
 Complexity classification runs on Sonnet — a wrong classification cascades to all downstream routing decisions. Migration Discovery (M1) also runs on Sonnet — UIKit behavior classification requires pattern recognition beyond Haiku's capability.
 
+Phase 2 (Task Breakdown) uses **smart downgrade**: Sonnet for SIMPLE scores, Opus for COMPLEX. ViewModel generation, Pipeline C MODIFY, and D1 RCA always stay on Opus — downgrading those would materially hurt result quality.
+
 ### Parallel Waves
 Phase 3 Code Gen uses a dependency graph to group tasks into waves. Independent tasks in the same wave run as parallel subagents. The orchestrator waits for each wave to complete before starting the next.
 
@@ -464,6 +466,7 @@ See [CHANGELOG.md](CHANGELOG.md) for full history.
 
 | Version | Highlights |
 |---|---|
+| 0.15.0 | Smart model downgrade: Phase 2 Sonnet for SIMPLE, Opus for COMPLEX — ~40% cost reduction for Pro subscribers |
 | 0.14.0 | Pipeline E — Micro: TRIVIAL pre-check, 3-step flow for single UI edits, Haiku-only, auto-escalation |
 | 0.13.0 | Semi-autonomous learning system: Learning Collector + submit-learnings command, privacy filter, draft PR flow |
 | 0.12.0 | Model routing fixes (Complexity Classifier + Migration Discovery → Sonnet), gates.md extracted, RULE-INDEX.md, CONTRIBUTING.md, M1→M2 gate, C-2/C-10 robustness, complexity soft window |
