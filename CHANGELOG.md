@@ -5,6 +5,38 @@ Format: [version] — date — description
 
 ---
 
+## [0.12.0] — 2026-04-17
+
+### Changed — Model routing fixes, gate extraction, contributor tooling
+
+**Model routing correctness:**
+- `model-routing.md` — Complexity Classifier upgraded Haiku → Sonnet (wrong classification cascades to all downstream routing); Migration Discovery (M1) upgraded Haiku → Sonnet (UIKit behavior classification requires pattern recognition); Phase 4.5 revision diagnosis downgraded Opus → Sonnet (single-file structural diagnosis, Sonnet capable)
+
+**Gate extraction and new gates:**
+- `.agent/gates.md` (new) — complete phase gate conditions for all 4 pipelines extracted from CLAUDE.md; includes state file recovery protocol for missing/corrupted `.state/` files
+- `CLAUDE.md` — Phase Gate Validators table replaced with pointer to gates.md
+- `m01-discovery.md` — M1→M2 Quality Gate checklist added (every component named in change request must have discovery entry; tech debt baseline saved)
+- `gates.md` + `CLAUDE.md` — M1→M2 gate formally added to Pipeline B
+
+**Compliance checker robustness:**
+- `compliance-checker.md` — C-2 force-unwrap grep rewritten: `[a-zA-Z0-9_)]!` prevents false positives from boolean-NOT `!isEnabled`
+- `compliance-checker.md` — C-10 #Preview grep rewritten: uses `IFS= read -r` loop (no word splitting on spaces) and `struct [A-Za-z]*: View` pattern (no false matches on protocol conformances)
+
+**Complexity classifier soft window:**
+- `complexity-classifier.md` — Added scoring uncertainty note: ±8 pt variance; scores 35–45 default to COMPLEX; only ≤30 is reliably SIMPLE
+
+**Contributor tooling:**
+- `CONTRIBUTING.md` (new) — how to add patterns, pipeline phases, pipelines, and rules without breaking existing behavior; format rules for pattern files
+- `.agent/RULE-INDEX.md` (new) — cross-reference mapping each hard rule to every file that enforces or references it
+- `self-validation.md` — Testing framework check made conditional: Xcode 15 → `XCTestCase`, Xcode 16+ → `@Suite` + `@Test`
+
+**Maintenance:**
+- `03-code-gen.md` — Inline self-check list replaced with single reference to `self-validation.md` (eliminates dual-maintenance risk)
+- All 15+ pattern files — "Apply when" preambles removed (~678 static tokens saved; ~2–4K per complex pipeline run)
+- `CLAUDE.md` — Hard Rules section moved to top of file (first ~25 lines, before pipelines)
+
+---
+
 ## [0.11.0] — 2026-04-16
 
 ### Added — Gap 3, 4, 5 Optimizations

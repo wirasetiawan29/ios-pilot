@@ -19,7 +19,7 @@ Every subagent spawn MUST specify a model based on this table.
 
 | Phase | Task | Model | Reason |
 |---|---|---|---|
-| Complexity Classifier | scoring | Haiku | Simple scoring, no reasoning needed |
+| Complexity Classifier | scoring | Sonnet | Brief interpretation requires reasoning — wrong classification cascades to all downstream routing |
 | Phase 0 | Codebase Reader | Sonnet | Read + summarize, moderate reasoning |
 | Phase 1 | Spec reasoning (gap analysis, ambiguities) | Opus | Architectural judgment required |
 | Phase 1 | Spec file writing (01-spec.md) | Haiku | Structured template output |
@@ -32,11 +32,11 @@ Every subagent spawn MUST specify a model based on this table.
 | Phase 3 | Code Gen — Theme.swift | Haiku | Token-to-Swift translation, boilerplate |
 | Phase 3.5 | Build Validator (error diagnosis) | Sonnet | Read error + generate targeted fix |
 | Phase 4 | Unit Tests (all) | Haiku | Boilerplate-heavy, pattern-following |
-| Phase 4.5 | Revision Cycle (diagnosis) | Opus | Structural issue diagnosis |
+| Phase 4.5 | Revision Cycle (diagnosis) | Sonnet | Single-file structural diagnosis — Sonnet capable |
 | Phase 4.5 | Revision Cycle (code fix) | Sonnet | Targeted code patch |
 | Phase 5 | Review (per file) | Sonnet | Code review, pattern matching |
 | Phase 5 | PR description merge | Sonnet | Consolidation writing |
-| Pipeline B | Migration Discovery (per file) | Haiku | Scan + classify UIKit patterns |
+| Pipeline B | Migration Discovery (per file) | Sonnet | UIKit behavior classification requires pattern recognition beyond Haiku |
 | Pipeline B | Migration Strategy | Opus | Architectural conversion decisions |
 | Pipeline B | Converter (per component) | Sonnet | UIKit → SwiftUI translation |
 | Pipeline C | Delta Spec reasoning | Opus | What changes, impact on existing code |

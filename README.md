@@ -4,7 +4,7 @@
 
 No Python. No separate API key. No extra tooling beyond Xcode and `xcodegen`.
 
-![Version](https://img.shields.io/badge/version-0.11.0-blue)
+![Version](https://img.shields.io/badge/version-0.12.0-blue)
 ![Swift](https://img.shields.io/badge/Swift-5.9%2B-orange)
 ![iOS](https://img.shields.io/badge/iOS-17%2B-lightgrey)
 ![Xcode](https://img.shields.io/badge/Xcode-15%2B-blue)
@@ -168,6 +168,7 @@ Crash / Report → RCA (exact file + line) → Surgical Fix → Build + Regressi
 | M5.1 | Test Run | All parity tests must pass — BLOCKED verdict if any fail |
 
 **Key gates:**
+- M1→M2 requires every UIKit component in the change request to have a discovery entry and tech debt baseline saved
 - M2→M3 requires feature flag strategy confirmed by user
 - M4→M4.5 requires all `// MIGRATION:` annotation counts to match file headers
 - M4.5→M5 requires build ✅ or ⚠️
@@ -205,14 +206,18 @@ Gate D1: confidence stays LOW after 5+ files → pipeline stops and asks for mor
 ### Complexity Scoring
 Before Phase 1, the pipeline scores your request as **SIMPLE** (< 40 points) or **COMPLEX** (≥ 40). Simple features skip heavyweight phases and use faster models.
 
+Because "Lines of code" is estimated from the brief and "Spec clarity" is subjective, scores can vary ±8 pts across runs. Any score in the **35–45 range defaults to COMPLEX**. Only treat a score as reliably SIMPLE if it is ≤ 30.
+
 ### Model Routing
 Every subagent spawn picks a model based on the task:
 
 | Task type | Model |
 |---|---|
 | Spec reasoning, RCA, architectural decisions | Opus |
-| Code gen (non-ViewModel), review, orchestration | Sonnet |
+| Code gen (non-ViewModel), review, orchestration, **complexity classification**, **migration discovery** | Sonnet |
 | Test gen, file writing, boilerplate | Haiku |
+
+Complexity classification runs on Sonnet — a wrong classification cascades to all downstream routing decisions. Migration Discovery (M1) also runs on Sonnet — UIKit behavior classification requires pattern recognition beyond Haiku's capability.
 
 ### Parallel Waves
 Phase 3 Code Gen uses a dependency graph to group tasks into waves. Independent tasks in the same wave run as parallel subagents. The orchestrator waits for each wave to complete before starting the next.
@@ -241,6 +246,8 @@ After code generation and before the build, the compliance checker runs 11 grep-
 | C-11 | No `error.localizedDescription` assigned directly to UI |
 
 Any violation = `[BLOCKER]`. The build step does not start until all violations are resolved.
+
+C-2 (force unwrap) and C-10 (#Preview) use robust shell patterns that avoid false positives from boolean-NOT operators and protocol conformance declarations.
 
 ---
 
@@ -353,9 +360,19 @@ examples/login-feature/
 | **Architecture** | MVVM + Clean Architecture |
 | **State** | `@Observable` (not `ObservableObject`) |
 | **Concurrency** | `async/await` |
-| **Tests** | XCTest (Xcode 15+) · Swift Testing (Xcode 16+) |
+| **Tests** | XCTest (`XCTestCase` on Xcode 15) · Swift Testing (`@Suite` + `@Test` on Xcode 16+) |
 | **Build** | xcodegen + xcodebuild |
 | **CI/CD** | GitHub Actions + Fastlane |
+
+---
+
+## Internal Reference Files
+
+| File | Purpose |
+|---|---|
+| `.agent/gates.md` | Complete phase gate conditions for all 4 pipelines + state file recovery protocol |
+| `.agent/RULE-INDEX.md` | Cross-reference: each hard rule → all files that enforce or reference it |
+| `CONTRIBUTING.md` | How to add patterns, pipelines, and rules without breaking existing behavior |
 
 ---
 
@@ -365,6 +382,7 @@ See [CHANGELOG.md](CHANGELOG.md) for full history.
 
 | Version | Highlights |
 |---|---|
+| 0.12.0 | Model routing fixes (Complexity Classifier + Migration Discovery → Sonnet), gates.md extracted, RULE-INDEX.md, CONTRIBUTING.md, M1→M2 gate, C-2/C-10 robustness, complexity soft window |
 | 0.11.0 | Compliance checker (11 grep checks), Pipeline B gates + test run, Large Feature Protocol |
 | 0.10.0 | Phase 4.1 test run, ShapeStyle/`@MainActor` in Fix Catalogue, Xcode 15+ target stack |
 | 0.9.0 | Component library, 14-pattern auto-fix loop, complete compilable login example |

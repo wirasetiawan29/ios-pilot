@@ -1,8 +1,5 @@
 # Pattern: Git Integration (Phase 5.5)
 
-Optional final step after Phase 5 (Review).
-Pushes the feature branch and creates a MR/PR from `05-pr.md`.
-
 **This step affects shared systems (remote repo, team visibility).**
 **Always show confirmation before push or MR creation.**
 

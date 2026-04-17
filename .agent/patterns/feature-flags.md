@@ -1,6 +1,5 @@
 # Pattern: Feature Flags
 
-**Apply when:** Spec mentions feature flags, A/B tests, gradual rollouts, or experimental features.
 Also used in Pipeline B (Migration) to gate UIKit → SwiftUI switches.
 
 ---

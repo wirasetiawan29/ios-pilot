@@ -1,6 +1,5 @@
 # Pattern: Localization
 
-**Apply when:** Any View file contains user-facing text, or the spec mentions multiple languages.
 iOS 17+ uses String Catalogs (`.xcstrings`) — never generate `.strings` files for new projects.
 
 ---

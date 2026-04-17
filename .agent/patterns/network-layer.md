@@ -1,8 +1,5 @@
 # Pattern: Network Layer
 
-**Apply when:** Any task involves API calls, HTTP requests, or external data fetching.
-Run this pattern before Code Gen writes any Repository or Service file that touches the network.
-
 ---
 
 ## Standard Architecture

@@ -1,8 +1,5 @@
 # Pattern: Persistence (SwiftData)
 
-**Apply when:** Spec involves offline support, local cache, user preferences beyond UserDefaults,
-or any data that must survive app restart.
-
 iOS 17+ target → use **SwiftData**. CoreData only if migrating an existing project.
 
 ---

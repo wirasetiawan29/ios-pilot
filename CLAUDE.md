@@ -15,10 +15,40 @@ Project Mode requires: git-safety check → branch creation → Phase 0 (Codebas
 
 ---
 
+## Hard Rules
+
+- Never invent requirements not in the input
+- Never skip a phase
+- No force unwrap · no `print()` · no unresolved `TODO` in generated Swift
+- Every generated View must include a `#Preview` block
+- No hardcoded `Color(red:green:blue:)` or numeric font sizes — use Theme tokens
+- Image/Color assets that are not SF Symbols → `// ASSET-REQUIRED:` comment
+- `// MIGRATION:` annotations must flow through to parity report
+- Navigation rules N-1 to N-6 are mandatory — see `.agent/patterns/navigation-rules.md`
+
+---
+
 ## Session Start
 
 **Every new session:** Run `.agent/patterns/context-restore.md` before responding to the first message.
 Show restore banner if an in-progress pipeline is found. Then proceed normally.
+
+---
+
+## Pre-Flight Checklist
+
+Run these 5 gates at session start, before executing any pipeline phase.
+A failed gate blocks the pipeline until resolved.
+
+| Gate | Check | File/Command |
+|---|---|---|
+| **G1 — Context Restored** | `output/.state/session-started.md` exists | Written by `context-restore.md` |
+| **G2 — Repo Identity** | Agent CWD ≠ target project root (Project Mode only) | `git-safety.md` → Repo Identity Validation |
+| **G3 — Build Tool** | `xcodebuild` chosen for iOS targets (not `swift test`) | `git-safety.md` → Build Tool Detection |
+| **G4 — Complexity Classified** | `.state/complexity.md` exists before Phase 1 | `complexity-classifier.md` |
+| **G5 — Baseline Captured** | `.state/b00-baseline-tests.md` exists before B1/D2 | `baseline-test.md` |
+
+G2 and G3 only apply in Project Mode. G5 only applies to Pipeline C and D.
 
 ---
 
@@ -32,15 +62,12 @@ Show restore banner if an in-progress pipeline is found. Then proceed normally.
 | "help", "what can you do", "commands", "?" | `.agent/commands/help.md` — context-aware |
 | Anything else (brief, file path, feature request) | Auto-detect pipeline → Plan Mode first, then wait |
 
-**Default is always Plan Mode first.** See `.agent/plan-mode.md` for report format.
-
 ---
 
 ## Pipeline Selection
 
 Run `.agent/patterns/pipeline-detector.md` on every new user input (not a known command).
 It scores signals in the input and selects the right pipeline automatically.
-Only ask the user to clarify if the top two pipelines score within 1 point of each other.
 
 | Input | Pipeline |
 |---|---|
@@ -108,7 +135,8 @@ Phase 3.5→4 requires build ✅ or ⚠️ (no 🚫).
 [M5.1] Test Run      SEQUENTIAL        — xcodebuild test · parity tests must pass · write m05-test-report.md
 ```
 
-Gates: M2→M3: coexistence plan written · feature flag confirmed by user.
+Gates: M1→M2: discovery complete · every component in change request has entry · tech debt baseline saved.
+M2→M3: coexistence plan written · feature flag confirmed by user.
 M4→M4.5: all converted files saved · MIGRATION annotation count matches header.
 M4.5→M5: build ✅ or ⚠️ (no 🚫).
 M5.1→merge: all parity tests ✅ · no BLOCKED verdict · all MIGRATION annotations resolved.
@@ -121,6 +149,7 @@ Project Mode mandatory. Codebase Reader always runs.
 
 ```
 [0]  Codebase Reader   MANDATORY    — refresh if >30 days old
+[B0] Baseline Tests    SEQUENTIAL   — .agent/patterns/baseline-test.md · capture pre-change test state
 [B1] Delta Spec        SEQUENTIAL   — .agent/brownfield/b01-delta-spec.md
 [B2] Impact Analysis   SEQUENTIAL   — .agent/brownfield/b02-impact-analysis.md
 [B3] Code Patch        PARALLEL     — .agent/brownfield/b03-code-patch.md · wave order from B2
@@ -129,7 +158,7 @@ Project Mode mandatory. Codebase Reader always runs.
 [B6] Review            PARALLEL→MERGE
 ```
 
-Gates: B1 Ambiguities empty. B2 DELETE files confirmed by user. B4 build ✅ or ⚠️.
+Gates: B0→B1: baseline report written. B1 Ambiguities empty. B2 DELETE files confirmed by user. B4 build ✅ or ⚠️.
 
 ---
 
@@ -150,31 +179,9 @@ Gate D1: confidence LOW after 5+ files → STOP, ask user.
 
 ## Phase Gate Validators
 
-| Gate | Check |
-|---|---|
-| Pre-Phase 1 | `.state/complexity.md` exists |
-| Phase 0→1 | `.state/project-context.md` exists |
-| Phase 1→2 | Ambiguities empty · Spec Checksum matches · `## Navigation Contract` present |
-| Phase 2→3 | Every task has unique path · all deps exist · View tasks quote Navigation Contract |
-| Phase 3→3.5 | All .swift files saved · compliance-checker passes (no Hard Rule violations) · no NavigationStack outside #Preview · no child navigationDestination |
-| Phase 3.5→3.6 | Build ✅ or ⚠️ · spec has `## Visual Anchors` (else skip) |
-| Phase 3.5→4 | Build ✅ or ⚠️ (no 🚫) |
-| Phase 4→4.1 | All test files saved · no PENDING-REVISION |
-| Phase 4.1→4.5 | 04-test-report.md exists · all tests ✅ · Check revision-requests.md — empty → skip 4.5 |
-| Phase 5→PR | AC Coverage Table complete |
-| Phase 5→5.5 | User requested · 05-pr.md exists · working tree clean |
-| Phase 5.5 | No CRITICAL in security-report.md (if run) |
-| B1→B2 | Ambiguities empty · Delta Checksum matches |
-| B2→B3 | DELETE confirmed by user · wave order present |
-| B3→B4 | Patch log exists for every file in b02-impact.md |
-| B4→B5 | b04-build-report.md ✅ or ⚠️ |
-| B5→B6 | All UNCHANGED-TEST files have regression test |
-| M2→M3 | Coexistence plan written · feature flag approach confirmed by user |
-| M4→M4.5 | All converted files saved · MIGRATION annotation count matches each file header |
-| M4.5→M5 | Build ✅ or ⚠️ (no 🚫) |
-| M5.1→merge | All parity tests ✅ · no BLOCKED verdict · all MIGRATION annotations resolved |
-| D1→D2 | Root cause: specific file + line · confidence HIGH or MEDIUM |
-| D2→D3 | d02-fix-summary.md exists · // BUGFIX: in all changed lines |
+Full gate conditions (all pipelines) → `.agent/gates.md`
+
+Also includes: state file recovery protocol for missing or corrupted `.state/` files.
 
 ---
 
@@ -202,6 +209,7 @@ Gate D1: confidence LOW after 5+ files → STOP, ask user.
 | `.agent/patterns/project-yml.md` | Creating or modifying project.yml |
 | `.agent/patterns/visual-verification.md` | Phase 3.6 — Visual Anchors present + build passed |
 | `.agent/patterns/git-integration.md` | Phase 5.5 — on user request only |
+| `.agent/patterns/baseline-test.md` | Pipeline C Phase B0 · Pipeline D before D2 — capture pre-change test state |
 | `.agent/patterns/push-notifications.md` | When spec mentions push / APNS |
 | `.agent/patterns/analytics.md` | When spec mentions tracking / events |
 | `.agent/patterns/persistence.md` | When spec mentions offline / local data |
@@ -234,19 +242,6 @@ to find the last completed step. Do not re-run completed tasks.
 | "tech debt" / "scan debt" / "code quality" | `.agent/tech-debt.md` |
 | "create MR" / "open PR" / "push and create MR" | `.agent/patterns/git-integration.md` |
 | "setup ci" / "add ci/cd" / "github actions" / "fastlane" | `.agent/patterns/cicd.md` |
-
----
-
-## Hard Rules
-
-- Never invent requirements not in the input
-- Never skip a phase
-- No force unwrap · no `print()` · no unresolved `TODO` in generated Swift
-- Every generated View must include a `#Preview` block
-- No hardcoded `Color(red:green:blue:)` or numeric font sizes — use Theme tokens
-- Image/Color assets that are not SF Symbols → `// ASSET-REQUIRED:` comment
-- `// MIGRATION:` annotations must flow through to parity report
-- Navigation rules N-1 to N-6 are mandatory — see `.agent/patterns/navigation-rules.md`
 
 ---
 

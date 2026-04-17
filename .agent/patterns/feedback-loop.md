@@ -1,8 +1,5 @@
 # Pattern: Feedback Loop (Phase 4 → Phase 3)
 
-Allows Phase 4 (Unit Tests) to request targeted revisions to Phase 3 (Code Gen)
-without triggering a full pipeline re-run.
-
 Maximum one revision cycle. If the revised code still has testability issues,
 surface as `[WARNING]` in Phase 5 review — do not loop indefinitely.
 

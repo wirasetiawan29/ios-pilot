@@ -1,11 +1,5 @@
 # Pattern: Design Token Extraction
 
-Apply this pattern when a brief, spec, or design reference contains any of:
-- Color names, hex values, or "primary/secondary/accent" labels
-- Typography scale (font sizes, weights, families)
-- Spacing values
-- A design image, Figma link, or UI screenshot
-
 ---
 
 ## When to Apply

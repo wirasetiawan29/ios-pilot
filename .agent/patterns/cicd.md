@@ -1,8 +1,5 @@
 # Pattern: CI/CD
 
-**Apply when:** User requests CI/CD setup, GitHub Actions workflow, Fastlane lanes,
-or deployment to TestFlight / App Store.
-
 Generates: GitHub Actions workflow + Fastlane Fastfile + Matchfile for signing.
 
 ---

@@ -39,6 +39,8 @@ Use the brief (and `.state/project-context.md` if it exists) to score these dime
 
 **Borderline (38–42): default to COMPLEX.** When in doubt, run the full pipeline.
 
+> **Scoring uncertainty note:** The "Lines of code" dimension is estimated from the brief (not actual code), and "Spec clarity" is the most subjective dimension (0–15 pts). Two runs on the same vague brief may produce scores that differ by ±8 pts. Effective soft window is therefore **35–45**: any score in this range should default to COMPLEX regardless of the exact number. Only treat a score as reliably SIMPLE if it is ≤ 30.
+
 ---
 
 ## Result Thresholds

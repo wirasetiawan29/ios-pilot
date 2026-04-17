@@ -55,7 +55,9 @@ If any item fails → fix inline, do not save the broken version.
 
 **Unit Test**
 ```
-[ ] Uses @Suite and @Test (not XCTestCase)
+[ ] Framework matches project Xcode version:
+    Xcode 15 → XCTestCase class + func test_<method>_<condition>_<outcome>()
+    Xcode 16+ → @Suite struct + @Test + #expect  (check project.yml xcodeVersion)
 [ ] makeSUT() factory present
 [ ] Every AC in the paired ViewModel's file header has at least one test
 [ ] Mock conforms to the correct protocol

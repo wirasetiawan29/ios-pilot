@@ -6,7 +6,7 @@ This agent runs as a **parallel subagent** — one invocation per file.
 After all subagents complete, the orchestrator merges into `m01-discovery.md`.
 
 ## Model
-Haiku — pattern scanning per file (boilerplate-heavy, no deep reasoning needed per file).
+Sonnet — UIKit behavior classification requires pattern recognition (delegate patterns, lifecycle, diffable data sources) beyond Haiku's capability.
 Orchestrator (Sonnet) handles merge + complexity scoring after all subagents complete.
 
 ## Patterns
@@ -75,6 +75,15 @@ Orchestrator consolidates all blocks into:
 
 ## ⚑ Discovery Checksum
 Files read: N | Behaviors catalogued: N | Risk flags: N
+
+## Quality Gate (M1→M2)
+Before proceeding to M2 (Strategy):
+- [ ] Every UIKit component named in the change request has a discovery entry
+- [ ] Discovery Checksum: "Files read" count matches files in the change request
+- [ ] Tech debt baseline saved to `.state/m01-debt-baseline.md`
+- [ ] Any RISK FLAGS with no SwiftUI equivalent are flagged for user review
+
+If any item fails → STOP. Do not proceed to M2. Surface gap to user.
 
 ## Pre-Migration Tech Debt Baseline
 Run `.agent/tech-debt.md` on all UIKit source files before conversion.

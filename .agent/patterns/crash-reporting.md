@@ -1,6 +1,5 @@
 # Pattern: Crash Reporting
 
-**Apply when:** Spec is for a production feature, or user requests crash reporting setup.
 Supported providers: Firebase Crashlytics (default), Sentry.
 
 ---

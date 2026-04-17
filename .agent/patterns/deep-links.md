@@ -1,8 +1,5 @@
 # Pattern: Deep Links
 
-**Apply when:** Spec mentions deep links, Universal Links, URL schemes, or navigation from
-push notifications / external sources.
-
 ---
 
 ## Architecture

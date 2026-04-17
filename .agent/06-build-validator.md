@@ -16,6 +16,39 @@ No point writing tests for code that doesn't compile.
 
 ---
 
+## Build Tool Detection (Run First)
+
+Before any build or test command, inspect the project structure to pick the right tool:
+
+| Signal | Build Tool |
+|---|---|
+| `Package.swift` + `.iOS` platform target | `xcodebuild` (NOT `swift test`) |
+| `Package.swift` + macOS-only or cross-platform | `swift build` / `swift test` |
+| `project.yml` present | `xcodegen generate` → `xcodebuild` |
+| `*.xcodeproj` present | `xcodebuild` directly |
+
+**Why `swift test` fails for iOS packages:** `swift test` runs on the host macOS toolchain.
+iOS-only dependencies (e.g., Kingfisher) declare `.iOS` platform constraints that the macOS
+runner cannot satisfy. The error looks like:
+
+```
+error: the library 'MySDK' requires macos 10.13, but depends on the product
+'Kingfisher' which requires macos 10.14
+```
+
+This is a **toolchain mismatch**, not a code error. Always use `xcodebuild` for iOS packages.
+
+```bash
+# Detection script
+if [ -f "<project-path>/Package.swift" ] && grep -q '\.iOS' "<project-path>/Package.swift"; then
+  echo "iOS SPM package — use xcodebuild"
+  BUILD_CMD="xcodebuild test -scheme <Scheme> -sdk iphonesimulator \
+    -destination 'platform=iOS Simulator,name=iPhone 16'"
+fi
+```
+
+---
+
 ## Mode Detection
 
 **Sandbox Mode** (no project path): generate `project.yml` → run `xcodegen` → `xcodebuild` for iOS simulator.

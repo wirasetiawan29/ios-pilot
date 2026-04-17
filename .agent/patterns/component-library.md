@@ -1,8 +1,5 @@
 # Pattern: Component Library
 
-**Apply when:** Any View task is generated. Components replace raw SwiftUI primitives
-to ensure visual consistency and reduce repetition across screens.
-
 Generated once as `TASK-CL` (Component Library), depended on by all View tasks.
 
 ---

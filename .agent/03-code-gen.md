@@ -155,18 +155,13 @@ the reviewer can verify it exists before shipping.
 | Missing `.accessibilityIdentifier` on interactive element | UITest / visual check broken |
 
 ## Self-check before saving
-- [ ] File header written
-- [ ] Every AC in `AC coverage` is addressed in the code
-- [ ] No items from Hard Prohibitions list
-- [ ] View files: `#Preview` block present at end of file
-- [ ] View files: all colors/fonts/spacing use Theme tokens, not raw values
-- [ ] View files: no hardcoded strings — all use `L10n.*` or `String(localized:)`
-- [ ] View files: all interactive elements have `.accessibilityLabel` + `.accessibilityIdentifier`
-- [ ] View files: decorative images have `.accessibilityHidden(true)`
-- [ ] Repository/Service files: uses `NetworkClientProtocol`, never `URLSession` directly
-- [ ] Repository files: maps `AppNetworkError` to domain errors
-- [ ] Files with error states: uses `Logger` not `print()`, maps errors via `errorMessage(for:)`
-- [ ] Image/Color asset references have `// ASSET-REQUIRED:` comment if asset is not an SF Symbol
+
+Run `.agent/patterns/self-validation.md` — it is the single source of truth for all pre-save checks.
+
+Quick reference (do not maintain separately — always defer to self-validation.md):
+- File header written with AC coverage and depends-on
+- No items from Hard Prohibitions list above
+- Every AC listed in file header is addressed in the code
 
 ---
 

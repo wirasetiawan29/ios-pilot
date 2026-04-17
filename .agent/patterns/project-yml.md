@@ -1,7 +1,5 @@
 # Pattern: project.yml (XcodeGen)
 
-Apply this pattern whenever creating or modifying `project.yml`.
-
 ---
 
 ## sources vs resources

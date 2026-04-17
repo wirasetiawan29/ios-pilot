@@ -36,10 +36,14 @@ grep -rn "print(" Sources/ --include="*.swift" | grep -v "// "
 
 ### C-2 — No force unwraps in non-test Sources
 ```bash
-grep -rn "[^?!]![^=]" Sources/ --include="*.swift" | grep -v "fatalError\|#Preview\|// "
+grep -rn "[a-zA-Z0-9_)]!" Sources/ --include="*.swift" \
+  | grep -v "!=" \
+  | grep -v '^\s*//' \
+  | grep -v "fatalError\|#Preview"
 ```
 **Expected:** no output.
 **Fix:** replace with `guard let`, `if let`, or `?? defaultValue`.
+**Note:** matches `optional!` or `result!.` patterns. Boolean NOT (`!flag`) is excluded because `!` is not preceded by `[a-zA-Z0-9_)]` in that position.
 
 ---
 
@@ -114,12 +118,16 @@ if it genuinely needs human follow-up.
 
 ### C-10 — Every View file has a `#Preview` block
 ```bash
-for f in $(grep -rl ": View" Sources/ --include="*.swift"); do
-  grep -L "#Preview" "$f" && echo "MISSING #Preview: $f"
-done
+grep -rln "struct [A-Za-z]*: View\|class [A-Za-z]*: View" Sources/ --include="*.swift" \
+  | while IFS= read -r f; do
+    if ! grep -q "#Preview" "$f"; then
+      echo "MISSING #Preview: $f"
+    fi
+  done
 ```
 **Expected:** no output.
 **Fix:** append a minimal `#Preview { <ViewName>() }` block at end of file.
+**Note:** uses `IFS= read -r` to handle filenames with spaces; matches `struct Name: View` / `class Name: View` to avoid false-positives from protocol definitions.
 
 ---
 

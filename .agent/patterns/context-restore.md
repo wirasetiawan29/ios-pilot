@@ -124,3 +124,24 @@ All done. Ready for a new feature or "create MR" to open a PR.
 - If the user's first message continues the pipeline (e.g., "yes") — show banner then immediately execute.
 - If the user's first message starts something new — show banner, then start the new pipeline (the existing state is preserved in `output/`).
 - If the user says "ignore" or "start fresh" — skip the banner for this session only. Do not delete state.
+
+---
+
+## Session Tracking (MANDATORY)
+
+After running this pattern — regardless of whether an active pipeline was found —
+write the following file so the Pre-Flight Checklist can verify this step ran:
+
+**`output/.state/session-started.md`**
+
+```markdown
+# Session Started
+
+Date: <ISO datetime — e.g. 2026-04-16T11:30:00>
+Context restored: yes | no
+Active pipeline found: <feature-slug> | none
+Banner shown: yes | no
+```
+
+This file is checked by Gate 1 in the CLAUDE.md Pre-Flight Checklist.
+If this file is missing, the Orchestrator must run context-restore before any other action.

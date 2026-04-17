@@ -1,8 +1,5 @@
 # Pattern: Error Handling
 
-**Apply when:** Any task involves network calls, persistence, or user-facing error states.
-This pattern defines the standard error hierarchy and mapping strategy for the entire app.
-
 ---
 
 ## Error Hierarchy

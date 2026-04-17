@@ -1,7 +1,5 @@
 # Pattern: Push Notifications
 
-**Apply when:** Spec mentions push notifications, alerts, background updates, or APNS.
-
 ---
 
 ## Architecture

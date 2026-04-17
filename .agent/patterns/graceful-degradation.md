@@ -1,7 +1,5 @@
 # Pattern: Graceful Degradation
 
-How to handle subagent failures without blocking the entire pipeline.
-
 ---
 
 ## Failure Types

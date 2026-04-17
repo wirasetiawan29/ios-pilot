@@ -1,11 +1,5 @@
 # Pattern: Secrets Management
 
-**Apply when:** Any spec involves API base URLs, API keys, environment-specific config,
-or user credentials that need to persist across sessions.
-
-This pattern defines where every type of secret lives — and enforces that none of them
-end up hardcoded in Swift source files.
-
 ---
 
 ## The Golden Rule

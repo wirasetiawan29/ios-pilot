@@ -1,10 +1,5 @@
 # Pattern: Analytics
 
-**Apply when:** Spec mentions tracking, events, screen views, user behavior, or analytics.
-
-No third-party SDK is assumed — the pattern uses a protocol that any provider can implement
-(Firebase Analytics, Mixpanel, Amplitude, custom backend).
-
 ---
 
 ## Architecture
