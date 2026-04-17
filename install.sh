@@ -99,22 +99,61 @@ fi
 INSTALLED_VERSION=$(cat "$INSTALL_DIR/VERSION" 2>/dev/null || echo "unknown")
 print_ok "Version: $INSTALLED_VERSION"
 
-# ── 8. Done ──────────────────────────────────────────
+# ── 8. Install ios-pilot CLI command ─────────────────
+print_step "Installing ios-pilot command"
+
+BIN_DIR="$HOME/.local/bin"
+mkdir -p "$BIN_DIR"
+
+ln -sfn "$INSTALL_DIR/bin/ios-pilot" "$BIN_DIR/ios-pilot"
+print_ok "Linked: ios-pilot → $BIN_DIR/ios-pilot"
+
+# Add ~/.local/bin to PATH if not already there
+_add_to_path() {
+  local rc_file="$1"
+  local line='export PATH="$HOME/.local/bin:$PATH"'
+  if [ -f "$rc_file" ] && ! grep -q '.local/bin' "$rc_file"; then
+    echo "" >> "$rc_file"
+    echo "# ios-pilot" >> "$rc_file"
+    echo "$line" >> "$rc_file"
+    print_ok "Added ~/.local/bin to PATH in $rc_file"
+  fi
+}
+
+if [[ "$SHELL" == */zsh ]]; then
+  _add_to_path "$HOME/.zshrc"
+elif [[ "$SHELL" == */bash ]]; then
+  _add_to_path "$HOME/.bash_profile"
+  _add_to_path "$HOME/.bashrc"
+fi
+
+# Verify command is reachable
+if command -v ios-pilot &>/dev/null || [ -x "$BIN_DIR/ios-pilot" ]; then
+  print_ok "Command ready: ios-pilot"
+else
+  print_warn "Run: source ~/.zshrc (or restart terminal) to activate ios-pilot command"
+fi
+
+# ── 9. Done ──────────────────────────────────────────
 echo ""
 echo "────────────────────────────────────────────────"
 echo -e "${GREEN}${BOLD}ios-pilot installed successfully!${NC}"
 echo ""
-echo -e "${BOLD}Next steps:${NC}"
+echo -e "${BOLD}Usage:${NC}"
 echo ""
-echo "  1. Open ios-pilot in Claude Code:"
-echo "     claude $INSTALL_DIR"
+echo "  Sandbox Mode — from anywhere:"
+echo "  ${BOLD}ios-pilot${NC}"
 echo ""
-echo "  2. Try a sandbox feature (no Xcode project needed):"
-echo "     plan: build a login screen with email and password"
+echo "  Project Mode — from your Xcode project:"
+echo "  ${BOLD}cd ~/Projects/MyApp && ios-pilot${NC}"
+echo "  → Project auto-linked. Tell Claude: project: MyApp"
 echo ""
-echo "  3. Or use with your existing iOS project:"
-echo "     Copy your Xcode project into $INSTALL_DIR/"
-echo "     Then tell the agent: project: MyApp"
+echo "  Other commands:"
+echo "  ios-pilot update    — pull latest version"
+echo "  ios-pilot doctor    — check environment"
+echo "  ios-pilot version   — show installed version"
 echo ""
 echo "  Docs: https://github.com/wirasetiawan29/ios-pilot"
+echo ""
+echo -e "${YELLOW}Tip:${NC} If 'ios-pilot' is not found, run: source ~/.zshrc"
 echo ""

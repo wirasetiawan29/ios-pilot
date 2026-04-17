@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+# ios-pilot — global CLI launcher
+# Installed to ~/.local/bin/ios-pilot by install.sh
+# Run from anywhere: ios-pilot
+#                or: ios-pilot "plan: build a login screen"
+
+set -e
+
+INSTALL_DIR="${IOS_PILOT_HOME:-$HOME/ios-pilot}"
+BOLD='\033[1m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+# ── Sanity check ─────────────────────────────────────────────────────────────
+if [ ! -d "$INSTALL_DIR" ]; then
+  echo "ios-pilot not found at $INSTALL_DIR"
+  echo "Install with:"
+  echo "  curl -fsSL https://raw.githubusercontent.com/wirasetiawan29/ios-pilot/main/install.sh | bash"
+  exit 1
+fi
+
+if ! command -v claude &>/dev/null; then
+  echo "Claude Code not found. Install from: https://claude.ai/code"
+  exit 1
+fi
+
+# ── Subcommands ──────────────────────────────────────────────────────────────
+case "${1:-}" in
+  update)
+    echo -e "${BLUE}==>${NC} Updating ios-pilot..."
+    git -C "$INSTALL_DIR" pull --ff-only origin main
+    INSTALLED_VERSION=$(cat "$INSTALL_DIR/VERSION" 2>/dev/null || echo "unknown")
+    echo -e "  ${GREEN}✓${NC} Updated to v$INSTALLED_VERSION"
+    exit 0
+    ;;
+  doctor)
+    exec "$INSTALL_DIR/pilot" doctor
+    ;;
+  version|-v|--version)
+    cat "$INSTALL_DIR/VERSION" 2>/dev/null || echo "unknown"
+    exit 0
+    ;;
+  help|-h|--help)
+    echo ""
+    echo -e "${BOLD}ios-pilot${NC} — Agentic iOS development pipeline"
+    echo ""
+    echo "Usage:"
+    echo "  ios-pilot                  Open ios-pilot in Claude Code"
+    echo "  ios-pilot update           Pull latest from GitHub"
+    echo "  ios-pilot doctor           Check environment dependencies"
+    echo "  ios-pilot version          Show installed version"
+    echo ""
+    echo "Project Mode (run from inside your Xcode project):"
+    echo "  cd ~/Projects/MyApp && ios-pilot"
+    echo "  → Project auto-linked. Tell Claude: project: MyApp"
+    echo ""
+    exit 0
+    ;;
+esac
+
+# ── Project Mode auto-detection ──────────────────────────────────────────────
+PROJECT_HINT=""
+
+if git rev-parse --is-inside-work-tree &>/dev/null 2>&1; then
+  PROJECT_ROOT=$(git rev-parse --show-toplevel)
+  PROJECT_NAME=$(basename "$PROJECT_ROOT")
+
+  # Don't self-link if already inside ios-pilot
+  if [ "$PROJECT_ROOT" != "$INSTALL_DIR" ]; then
+    LINK_PATH="$INSTALL_DIR/$PROJECT_NAME"
+
+    # Create or refresh symlink
+    if [ ! -e "$LINK_PATH" ] || [ "$(readlink "$LINK_PATH" 2>/dev/null)" != "$PROJECT_ROOT" ]; then
+      ln -sfn "$PROJECT_ROOT" "$LINK_PATH"
+    fi
+
+    PROJECT_HINT="$PROJECT_NAME"
+  fi
+fi
+
+# ── Launch ───────────────────────────────────────────────────────────────────
+echo ""
+echo -e "${BOLD}ios-pilot${NC} v$(cat "$INSTALL_DIR/VERSION" 2>/dev/null || echo '?')"
+echo "────────────────────────────────────────"
+
+if [ -n "$PROJECT_HINT" ]; then
+  echo -e "  ${GREEN}✓${NC} Project detected: ${BOLD}$PROJECT_HINT${NC}"
+  echo -e "  ${BLUE}→${NC}  In Claude, say: ${BOLD}project: $PROJECT_HINT${NC}"
+  echo ""
+else
+  echo -e "  Sandbox Mode — output goes to output/<feature-slug>/"
+  echo ""
+fi
+
+exec claude "$INSTALL_DIR" "$@"

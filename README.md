@@ -45,52 +45,61 @@ Every pipeline run starts in **Plan Mode** — the agent shows exactly what it w
 curl -fsSL https://raw.githubusercontent.com/wirasetiawan29/ios-pilot/main/install.sh | bash
 ```
 
-The installer checks for Claude Code, Xcode, and Homebrew, installs `xcodegen`, and clones ios-pilot to `~/ios-pilot`. Then open it in Claude Code:
-
-```bash
-claude ~/ios-pilot
-```
+The installer clones ios-pilot to `~/ios-pilot`, installs `xcodegen`, and adds the `ios-pilot` command to your PATH. After installation, **restart your terminal** (or run `source ~/.zshrc`).
 
 ---
 
 ## Quickstart
 
-### Sandbox Mode — no Xcode project needed
+### Start from anywhere — just type `ios-pilot`
 
-Open the folder in Claude Code and describe what you want:
-
+```bash
+ios-pilot
 ```
+
+That's it. Claude Code opens with ios-pilot loaded. No `cd` needed.
+
+### Sandbox Mode — no existing project required
+
+```bash
+ios-pilot
+# In Claude:
 plan: build a login screen with email/password, error handling, and loading state
 ```
 
-The agent shows a plan. Approve with:
+The agent shows a plan. Approve with `yes`. Output goes to `output/<feature-slug>/` — a complete, compilable Xcode project.
 
-```
-yes
-```
+### Project Mode — write directly to your existing app
 
-Output goes to `output/<feature-slug>/`. Includes a `project.yml` so you can open it in Xcode immediately.
+Run `ios-pilot` from **inside your project directory**:
 
-### Project Mode — writes directly to your app
-
-Place your Xcode project inside this folder:
-
-```
-ios-pilot/
-├── .agent/
-├── CLAUDE.md
-└── MyApp/              ← your project here
-    ├── MyApp.xcodeproj
-    └── MyApp/
+```bash
+cd ~/Projects/MyApp
+ios-pilot
 ```
 
-Then point the agent at it:
+The installer auto-detects your project and prints:
+
+```
+✓ Project detected: MyApp
+→ In Claude, say: project: MyApp
+```
+
+Then in Claude:
 
 ```
 project: MyApp — add push notification permission flow
 ```
 
-The agent reads your codebase first (Phase 0 — Codebase Reader), detects the right pipeline, and proceeds.
+The agent reads your codebase (Phase 0 — Codebase Reader), creates an `agent/feature-timestamp` branch, and writes only to that branch.
+
+### Other commands
+
+```bash
+ios-pilot update     # pull latest version from GitHub
+ios-pilot doctor     # check all dependencies
+ios-pilot version    # show installed version
+```
 
 ---
 
