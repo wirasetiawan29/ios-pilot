@@ -4,7 +4,7 @@
 
 No Python. No separate API key. No extra tooling beyond Xcode and `xcodegen`.
 
-![Version](https://img.shields.io/badge/version-0.13.0-blue)
+![Version](https://img.shields.io/badge/version-0.14.0-blue)
 ![Swift](https://img.shields.io/badge/Swift-5.9%2B-orange)
 ![iOS](https://img.shields.io/badge/iOS-17%2B-lightgrey)
 ![Xcode](https://img.shields.io/badge/Xcode-15%2B-blue)
@@ -129,6 +129,13 @@ Delta Spec → Impact Analysis (NEW/MODIFY/DELETE/RIPPLE)
 Crash / Report → RCA (exact file + line) → Surgical Fix → Build + Regression Test
 ```
 
+### E — Micro
+> Single UI element on an existing screen — no spec, no tests, done in seconds
+
+```
+TRIVIAL detected → Plan Confirm → Surgical Edit → Quick Check (5 rules)
+```
+
 ---
 
 ## Phase Details
@@ -204,14 +211,37 @@ Gates: B1 zero ambiguities. B2 DELETE files confirmed by user before B3 runs.
 
 Gate D1: confidence stays LOW after 5+ files → pipeline stops and asks for more information. A guess is never written as a fix.
 
+### Pipeline E — Micro
+
+| Phase | Agent | What it produces |
+|---|---|---|
+| T0 | Plan Confirm | One-line plan: "Edit `<file>`: add `<element>`" — waits for user "yes" |
+| T1 | Surgical Edit | Minimal change using component library + Theme tokens, Haiku model |
+| T2 | Quick Check | 5 compliance checks (C-1 C-2 C-3 C-4 C-10) on changed file only |
+
+**Activates automatically** when all 5 TRIVIAL signals are true:
+- Single named UI element (button, label, color, icon, spacing…)
+- Element is on an existing screen — not a new screen or flow
+- No API, network, or data persistence involved
+- No ViewModel method, Service, or Protocol change
+- Request uses: add · change · remove · move · rename + one element
+
+If the edit turns out to need more than 2 files or new logic → escalates immediately and suggests running the full pipeline instead.
+
 ---
 
 ## How the Pipeline Thinks
 
 ### Complexity Scoring
-Before Phase 1, the pipeline scores your request as **SIMPLE** (< 40 points) or **COMPLEX** (≥ 40). Simple features skip heavyweight phases and use faster models.
+Before routing, the pipeline classifies your request into one of three tiers:
 
-Because "Lines of code" is estimated from the brief and "Spec clarity" is subjective, scores can vary ±8 pts across runs. Any score in the **35–45 range defaults to COMPLEX**. Only treat a score as reliably SIMPLE if it is ≤ 30.
+| Tier | Condition | Pipeline |
+|---|---|---|
+| **TRIVIAL** | Single UI element, existing screen, no logic change | E — Micro (3 steps) |
+| **SIMPLE** | Score < 40 | A/B/C/D with shortcuts |
+| **COMPLEX** | Score ≥ 40 | A/B/C/D full pipeline |
+
+TRIVIAL is detected before scoring runs — no scorer needed. For SIMPLE/COMPLEX, scores can vary ±8 pts; any score in the **35–45 range defaults to COMPLEX**. Only treat a score as reliably SIMPLE if it is ≤ 30.
 
 ### Model Routing
 Every subagent spawn picks a model based on the task:
@@ -417,6 +447,7 @@ See [CHANGELOG.md](CHANGELOG.md) for full history.
 
 | Version | Highlights |
 |---|---|
+| 0.14.0 | Pipeline E — Micro: TRIVIAL pre-check, 3-step flow for single UI edits, Haiku-only, auto-escalation |
 | 0.13.0 | Semi-autonomous learning system: Learning Collector + submit-learnings command, privacy filter, draft PR flow |
 | 0.12.0 | Model routing fixes (Complexity Classifier + Migration Discovery → Sonnet), gates.md extracted, RULE-INDEX.md, CONTRIBUTING.md, M1→M2 gate, C-2/C-10 robustness, complexity soft window |
 | 0.11.0 | Compliance checker (11 grep checks), Pipeline B gates + test run, Large Feature Protocol |
