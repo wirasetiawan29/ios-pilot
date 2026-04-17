@@ -6,7 +6,6 @@ set -e
 
 REPO="https://github.com/wirasetiawan29/ios-pilot.git"
 INSTALL_DIR="$HOME/ios-pilot"
-VERSION="0.4.0"
 
 # Colors
 RED='\033[0;31m'
@@ -22,7 +21,7 @@ print_warn()  { echo -e "  ${YELLOW}⚠${NC}  $1"; }
 print_error() { echo -e "  ${RED}✗${NC} $1"; }
 
 echo ""
-echo -e "${BOLD}ios-pilot v${VERSION}${NC} — Agentic iOS development pipeline"
+echo -e "${BOLD}ios-pilot${NC} — Agentic iOS development pipeline"
 echo "────────────────────────────────────────────────"
 
 # ── 1. OS check ──────────────────────────────────────

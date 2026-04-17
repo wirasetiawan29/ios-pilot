@@ -431,6 +431,23 @@ examples/login-feature/
 
 ---
 
+## Known Limitations
+
+ios-pilot is honest about what it does not yet support:
+
+| Limitation | Detail |
+|---|---|
+| **Swift 5.9+ only** | Generated code targets Swift 5.9. Swift 6.0 strict concurrency (`Sendable`, actor isolation) is not enforced — planned for v1.1.0 |
+| **No UITest generation** | Only XCTest unit tests are generated. UI automation tests are out of scope |
+| **Claude Code CLI required** | Does not run in the Claude web interface or API directly — requires the `claude` CLI |
+| **xcodegen required in Sandbox Mode** | Sandbox Mode needs `xcodegen` to produce an `.xcodeproj`. Project Mode uses your existing project |
+| **Not validated at scale** | Tested on features up to ~10 files. Large projects (50+ files, complex dependency graphs) may surface edge cases |
+| **Learning system needs real data** | The Learning Collector is built and tested — but no real PR has been merged yet. Value is proven in design, not production |
+| **Pipeline E does not generate tests** | Micro edits skip test generation by design. Run the full pipeline if test coverage is required |
+| **Project Mode: git branch not auto-created** | In Project Mode, the agent works on the current branch. Always create a feature branch before running |
+
+---
+
 ## Internal Reference Files
 
 | File | Purpose |

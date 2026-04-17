@@ -51,7 +51,8 @@ struct LoginView: View {
     private var headerSection: some View {
         VStack(spacing: AppSpacing.sm) {
             Image(systemName: "lock.circle.fill")
-                .font(.system(size: 56))
+                .font(.system(.largeTitle).weight(.regular))
+                .imageScale(.large)
                 .foregroundStyle(.appPrimary)
                 .accessibilityHidden(true)  // A-3: decorative
 
@@ -143,6 +144,16 @@ struct LoginView: View {
             .accessibilityLabel(viewModel.isLoading ? "Signing in" : "Sign In")
             .accessibilityIdentifier("login_sign_in_button")  // A-2
             .animation(.easeInOut(duration: 0.15), value: viewModel.isLoginEnabled)
+
+            // Forgot Password — secondary action (no ViewModel method yet)
+            Button(action: {}) {
+                Text("Forgot Password?")
+                    .font(.appCaption)
+                    .foregroundStyle(.appSubtle)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Forgot Password?")
+            .accessibilityIdentifier("login_forgot_password_button")  // A-2
         }
     }
 
