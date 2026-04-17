@@ -5,6 +5,18 @@ Format: [version] — date — description
 
 ---
 
+## [0.14.0] — 2026-04-17
+
+### Added — Pipeline E (Micro) for trivial UI edits
+
+- `.agent/patterns/micro-pipeline.md` (new) — 3-step pipeline for single UI element edits on existing screens: T0 plan confirm → T1 surgical edit (Haiku) → T2 quick check (5 compliance checks only); no spec, no task breakdown, no build validator, no tests, no review; escalates automatically if change requires >2 files or new logic
+- `complexity-classifier.md` — TRIVIAL pre-check added as Step 0 (runs before scorer); 5 signals: single element, existing screen, no data layer, no logic change, action keyword; if all true → route to Pipeline E immediately, skip complexity scorer
+- `model-routing.md` — TRIVIAL pre-check row added: all Haiku (T0 + T1 + T2)
+- `gates.md` — Pipeline E gate table added (minimal: T0 user confirm + T2 quick check pass)
+- `CLAUDE.md` — Step 0 TRIVIAL pre-check added to Before Every Pipeline Run; Pipeline E section added; micro-pipeline.md added to Patterns Reference
+
+---
+
 ## [0.13.0] — 2026-04-17
 
 ### Added — Semi-autonomous learning system

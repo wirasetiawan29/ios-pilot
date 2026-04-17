@@ -49,6 +49,18 @@ A failed gate **blocks** the pipeline until resolved — never skip a gate.
 
 ---
 
+## Pipeline E — Micro
+
+| Gate | Condition |
+|---|---|
+| Pre-T1 | User confirmed "yes" at T0 plan screen |
+| T2 | C-1 C-2 C-3 C-4 C-10 pass on changed file |
+| Escalation trigger | Change requires >2 files or new ViewModel/Service/Protocol → stop, suggest full pipeline |
+
+No state files. No resumption needed (3 steps, completes in one context window).
+
+---
+
 ## Pipeline D — Bugfix
 
 | Gate | Condition |

@@ -19,6 +19,7 @@ Every subagent spawn MUST specify a model based on this table.
 
 | Phase | Task | Model | Reason |
 |---|---|---|---|
+| TRIVIAL pre-check | all (T0 confirm + T1 edit + T2 check) | Haiku | Single-file UI edit — no reasoning needed |
 | Complexity Classifier | scoring | Sonnet | Brief interpretation requires reasoning — wrong classification cascades to all downstream routing |
 | Phase 0 | Codebase Reader | Sonnet | Read + summarize, moderate reasoning |
 | Phase 1 | Spec reasoning (gap analysis, ambiguities) | Opus | Architectural judgment required |

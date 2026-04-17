@@ -5,11 +5,27 @@ Result determines: pipeline depth, model routing, parallelism threshold.
 
 ---
 
-## When to Run
+## Step 0 — TRIVIAL Pre-Check (runs BEFORE scoring)
 
-- Triggered automatically by Orchestrator after brief is received
+Before scoring, check if the request is TRIVIAL. If ALL five signals are true → skip
+scoring entirely, classify as TRIVIAL, and route to Pipeline E — Micro.
+
+| Signal | True when |
+|---|---|
+| Single UI element | Names one element: button, label, text, color, icon, image, spacing, font |
+| Existing screen | Element is on an existing View, not a new screen or flow |
+| No data layer | No API, network, persistence, Keychain, UserDefaults |
+| No logic change | No ViewModel method, Service, Repository, Protocol, or business rule |
+| Action keyword | add/tambah · change/ganti/ubah · remove/hapus · move/pindah · rename + one element |
+
+If ANY signal is false → proceed to scoring below normally.
+
+---
+
+## When to Run (scoring)
+
+- Triggered automatically by Orchestrator after brief is received, if TRIVIAL pre-check fails
 - Re-run after Phase 1 only if spec reveals significantly more scope than the brief suggested
-- Skip if user explicitly states: "simple fix", "one file", "quick change"
 
 ---
 
@@ -47,6 +63,7 @@ Use the brief (and `.state/project-context.md` if it exists) to score these dime
 
 | Score | Classification | Description |
 |---|---|---|
+| TRIVIAL pre-check | **TRIVIAL** | Single UI element on existing screen — Pipeline E (Micro) |
 | < 40 | **SIMPLE** | Small, self-contained change — shortcuts allowed |
 | ≥ 40 | **COMPLEX** | Multi-layer feature — full pipeline required |
 
@@ -129,6 +146,15 @@ Estimated output: 3 Swift files + 1 test file
 ---
 
 ## Examples
+
+### Example 0 — TRIVIAL
+Brief: "Tambah button 'Forgot Password?' di bawah login button di LoginView"
+- Single UI element: button ✅
+- Existing screen: LoginView ✅
+- No data layer: no API/persistence ✅
+- No logic change: no ViewModel method needed ✅
+- Action keyword: "tambah" + "button" ✅
+**Result: TRIVIAL → Pipeline E — Micro (skip scorer)**
 
 ### Example A — SIMPLE
 Brief: "Add a loading spinner to the existing LoginView while the login API call is in progress"

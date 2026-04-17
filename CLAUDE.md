@@ -81,6 +81,9 @@ It scores signals in the input and selects the right pipeline automatically.
 
 ## Before Every Pipeline Run
 
+**Step 0 — TRIVIAL Pre-Check:** Run TRIVIAL detection from `.agent/patterns/complexity-classifier.md`.
+If ALL 5 signals true → route to **Pipeline E — Micro** immediately. Skip Steps 1–3.
+
 **Step 1 — Complexity:** Run `.agent/patterns/complexity-classifier.md` → `.state/complexity.md`
 
 | Score | Result | Effect |
@@ -182,6 +185,22 @@ Gate D1: confidence LOW after 5+ files → STOP, ask user.
 
 ---
 
+## Pipeline E — Micro
+
+Single UI element edit on an existing screen. Activates via TRIVIAL pre-check.
+
+```
+[T0] Plan Confirm   PLAN MODE   — .agent/patterns/micro-pipeline.md · one-line plan · wait for yes
+[T1] Surgical Edit  SEQUENTIAL  — Haiku · minimal change · component library + Theme tokens only
+[T2] Quick Check    SEQUENTIAL  — Haiku · C-1 C-2 C-3 C-4 C-10 on changed file only
+```
+
+No spec, no task breakdown, no build validator, no tests, no review.
+User is informed at T0 and completion: "No tests generated."
+If change requires >2 files or new logic → escalate: suggest "plan: <feature>" instead.
+
+---
+
 ## Phase Gate Validators
 
 Full gate conditions (all pipelines) → `.agent/gates.md`
@@ -207,6 +226,7 @@ Also includes: state file recovery protocol for missing or corrupted `.state/` f
 | `.agent/patterns/context-management.md` | Any file over 200 lines |
 | `.agent/patterns/self-validation.md` | Before saving any generated file |
 | `.agent/patterns/compliance-checker.md` | After Phase 3 — grep-based Hard Rule verification before build |
+| `.agent/patterns/micro-pipeline.md` | TRIVIAL requests — single UI element on existing screen |
 | `.agent/patterns/learning-collector.md` | After every pipeline completes — advisory, non-blocking |
 | `.agent/patterns/graceful-degradation.md` | When any parallel subagent fails |
 | `.agent/patterns/api-contract-verification.md` | Before calling any existing service |
