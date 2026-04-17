@@ -31,7 +31,15 @@ If ANY signal is false → proceed to scoring below normally.
 
 ## Scoring
 
-Use the brief (and `.state/project-context.md` if it exists) to score these dimensions:
+Use the brief and — if it exists — **three sections only** from `.state/project-context.md`:
+- `## Dependencies` — to detect new external dependency (+10 adjustment)
+- `## Existing Infrastructure` — to score "new layers introduced"
+- `## Folder Structure` — to detect cross-feature impact (+10 adjustment)
+
+Do NOT load the full file. Naming Conventions, Swift Patterns, SwiftLint Rules, and
+Do Not Regenerate sections are irrelevant to scoring and waste context budget.
+
+To score these dimensions:
 
 ### Base Score
 
