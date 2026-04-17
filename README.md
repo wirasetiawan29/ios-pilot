@@ -4,7 +4,7 @@
 
 No Python. No separate API key. No extra tooling beyond Xcode and `xcodegen`.
 
-![Version](https://img.shields.io/badge/version-0.12.0-blue)
+![Version](https://img.shields.io/badge/version-0.13.0-blue)
 ![Swift](https://img.shields.io/badge/Swift-5.9%2B-orange)
 ![iOS](https://img.shields.io/badge/iOS-17%2B-lightgrey)
 ![Xcode](https://img.shields.io/badge/Xcode-15%2B-blue)
@@ -35,6 +35,7 @@ Every pipeline run starts in **Plan Mode** — the agent shows exactly what it w
 | Build fails after code gen | Build validator catches errors before tests start |
 | Review done by eye | Automated review with BLOCKER / WARNING / SUGGESTION |
 | Context resets lose work | State files persist every phase — auto-resume |
+| Pipeline never learns from mistakes | Learning Collector extracts reusable patterns after every run |
 
 ---
 
@@ -148,6 +149,7 @@ Crash / Report → RCA (exact file + line) → Surgical Fix → Build + Regressi
 | 4.5 | Revision Cycle | Targeted re-gen for untestable ViewModels (conditional) |
 | 5 | Review | `05-pr.md` — BLOCKER / WARNING / SUGGESTION per file |
 | 5.5 | PR / MR | GitHub / GitLab — on request only |
+| L | Learning Collector | `.state/learnings.md` — new patterns extracted, privacy-filtered, ready to submit |
 
 **Key gates:**
 - Phase 1→2 requires Navigation Contract present and zero unresolved ambiguities
@@ -166,6 +168,7 @@ Crash / Report → RCA (exact file + line) → Surgical Fix → Build + Regressi
 | M4.5 | Build Validator | Converted code must compile before parity tests start |
 | M5 | Parity Checker | `m05-tests/` + `m05-parity-report.md` — behavior-level regression tests |
 | M5.1 | Test Run | All parity tests must pass — BLOCKED verdict if any fail |
+| L | Learning Collector | `.state/learnings.md` — migration-specific patterns extracted for submission |
 
 **Key gates:**
 - M1→M2 requires every UIKit component in the change request to have a discovery entry and tech debt baseline saved
@@ -185,6 +188,7 @@ Crash / Report → RCA (exact file + line) → Surgical Fix → Build + Regressi
 | B4 | Patch Validator | `b04-build-report.md` — full `xcodebuild` with baseline check |
 | B5 | Regression Tests | NEW + RIPPLE + UNCHANGED-TEST scopes |
 | B6 | Review | Parallel per file → merged PR description |
+| L | Learning Collector | `.state/learnings.md` — brownfield patch patterns extracted |
 
 Gates: B1 zero ambiguities. B2 DELETE files confirmed by user before B3 runs.
 
@@ -196,6 +200,7 @@ Gates: B1 zero ambiguities. B2 DELETE files confirmed by user before B3 runs.
 | D1 | RCA | `d01-rca.md` — root cause to exact file + line (Opus) |
 | D2 | Fix Gen | Surgical fix, every changed line tagged `// BUGFIX:` |
 | D3 | Fix Validator | Build + regression test that fails before fix, passes after |
+| L | Learning Collector | `.state/learnings.md` — fix patterns extracted for catalogue |
 
 Gate D1: confidence stays LOW after 5+ files → pipeline stops and asks for more information. A guess is never written as a fix.
 
@@ -268,7 +273,7 @@ Every generated View is checked against 6 hard navigation rules enforced by both
 
 ## Production Patterns
 
-30 shared patterns run automatically at the right phase. Patterns cover every production concern:
+31 shared patterns run automatically at the right phase. Patterns cover every production concern:
 
 **Architecture & Code Quality**
 `complexity-classifier` · `model-routing` · `navigation-rules` · `self-validation` · `compliance-checker` · `context-management` · `graceful-degradation` · `feedback-loop` · `api-contract-verification`
@@ -283,7 +288,7 @@ Every generated View is checked against 6 hard navigation rules enforced by both
 `push-notifications` · `deep-links` · `feature-flags` · `analytics` · `crash-reporting` · `localization`
 
 **Infrastructure**
-`cicd` · `git-integration` · `git-safety` · `project-yml` · `pipeline-detector` · `context-restore` · `input-guard`
+`cicd` · `git-integration` · `git-safety` · `project-yml` · `pipeline-detector` · `context-restore` · `input-guard` · `learning-collector`
 
 ---
 
@@ -305,6 +310,36 @@ Run individual agents without a full pipeline:
 | `tech debt` | 9-category Swift debt report: force unwrap, `@MainActor` misuse, `ObservableObject` leftovers |
 | `create MR` / `open PR` | Push branch + create GitHub / GitLab MR with generated description |
 | `setup ci` | GitHub Actions CI + deploy workflows + Fastlane Fastfile |
+| `submit learnings` | Create a draft PR to ios-pilot with patterns learned from this pipeline run |
+
+---
+
+## Self-Improving Pipeline
+
+After every pipeline run, ios-pilot runs a **Learning Collector** — a lightweight agent that reads the build report, compliance report, test results, revision requests, and PR review, then extracts patterns that could improve the pipeline itself.
+
+```
+Pipeline completes
+  → Learning Collector writes output/<slug>/.state/learnings.md
+  → Patterns scored: HIGH · MEDIUM · LOW
+  → Privacy filter strips all project-specific identifiers
+
+You review the file, then say: "submit learnings"
+  → Agent shows confirmation screen with every proposed change
+  → You approve → draft PR created on ios-pilot repo
+  → Maintainer reviews before merge
+```
+
+**What gets learned:**
+
+| Source | Example learning |
+|---|---|
+| Build report — unmatched error | New row added to Fix Catalogue |
+| Compliance report — gap in C-1 to C-11 | New grep-based check proposed |
+| Revision requests — recurring pattern | Code-gen rule added to prevent the issue |
+| PR review — BLOCKER not caught by compliance | New compliance check candidate |
+
+**Privacy is mandatory.** All class names, method names, file paths, and string literals are stripped before any pattern leaves your machine. The draft PR contains only generic, reusable rules — nothing project-specific.
 
 ---
 
@@ -382,6 +417,7 @@ See [CHANGELOG.md](CHANGELOG.md) for full history.
 
 | Version | Highlights |
 |---|---|
+| 0.13.0 | Semi-autonomous learning system: Learning Collector + submit-learnings command, privacy filter, draft PR flow |
 | 0.12.0 | Model routing fixes (Complexity Classifier + Migration Discovery → Sonnet), gates.md extracted, RULE-INDEX.md, CONTRIBUTING.md, M1→M2 gate, C-2/C-10 robustness, complexity soft window |
 | 0.11.0 | Compliance checker (11 grep checks), Pipeline B gates + test run, Large Feature Protocol |
 | 0.10.0 | Phase 4.1 test run, ShapeStyle/`@MainActor` in Fix Catalogue, Xcode 15+ target stack |
