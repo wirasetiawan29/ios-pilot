@@ -5,6 +5,35 @@ Format: [version] — date — description
 
 ---
 
+## [0.17.0] — 2026-04-17
+
+### Added — Pipeline D, Project Mode, and Pipeline B all verified end-to-end
+
+**Pipeline D (Bugfix) — end-to-end verified**
+- Introduced deliberate logic bug in `CounterViewModel.reset()` (`count = 1` instead of `count = 0`)
+- Ran D1 RCA (confirmed root cause: file + line) → D2 Fix Gen (`// BUGFIX:` tagged) → D3 Fix Validator
+- `pilot test`: 2 failures → 13/13 pass after fix · `pilot compliance`: 11/11
+
+**Project Mode — verified**
+- Initialized counter-feature/03-code as standalone git repo
+- G2 (Repo Identity): agent repo ≠ target repo ✅
+- G3 (Build Tool): `project.yml` detected → `xcodegen_then_xcodebuild` ✅
+- Phase 0 Codebase Reader: `project-context.md` written with naming conventions, infrastructure, folder structure
+- Agent branch created: `agent/double-button-20260418`
+- Change request "add double button": ViewModel + View + Tests written → `pilot test` 15/15 ✅
+- All writes on agent branch — never touched `main`
+
+**Pipeline B (Migration) UIKit → SwiftUI — verified**
+- Created UIKit source: `CounterViewController` (@IBOutlet, @IBAction, delegate, DispatchQueue.main.async) + `CounterViewModelLegacy` (NSObject, delegate protocol)
+- M1 Discovery: 2 files, 6 behaviors, 2 risk flags (all LOW)
+- M2 Strategy: direct replacement, no coexistence, no feature flag
+- M3 Component Map: UIKit→SwiftUI mapping for every property/method/pattern
+- M4 Converter: `CounterViewModel` + `CounterView` with `// MIGRATION:` annotations
+- M4.5 Build Validator: `pilot build` ✅
+- M5 Parity: 9/9 parity tests pass · compliance 11/11 · all MIGRATION annotations resolved
+
+---
+
 ## [0.16.0] — 2026-04-17
 
 ### Added — Pipeline C test, context restore, brief-helper, Fast Mode, learning collector
