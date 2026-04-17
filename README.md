@@ -4,7 +4,7 @@
 
 No Python. No separate API key. No extra tooling beyond Xcode, `xcodegen`, and the included `pilot` CLI.
 
-![Version](https://img.shields.io/badge/version-0.17.0-blue)
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
 ![Swift](https://img.shields.io/badge/Swift-5.9%2B-orange)
 ![iOS](https://img.shields.io/badge/iOS-17%2B-lightgrey)
 ![Xcode](https://img.shields.io/badge/Xcode-15%2B-blue)
@@ -243,6 +243,8 @@ Before routing, the pipeline classifies your request into one of three tiers:
 
 TRIVIAL is detected before scoring runs — no scorer needed. For SIMPLE/COMPLEX, scores can vary ±8 pts; any score in the **35–45 range defaults to COMPLEX**. Only treat a score as reliably SIMPLE if it is ≤ 30.
 
+**Fast Mode** — requests scoring ≤ 20 skip Plan Mode approval entirely and auto-start with a `⚡ Fast Mode — score X/100` notice. All build and test phases still run.
+
 ### Model Routing
 Every subagent spawn picks a model based on the task:
 
@@ -305,7 +307,7 @@ Every generated View is checked against 6 hard navigation rules enforced by both
 
 ## Production Patterns
 
-35 shared patterns run automatically at the right phase. Each pattern has an explicit `## Triggers` section — keywords, phases, and task types that activate it — so agents load only the context they need.
+**35 shared patterns** run automatically at the right phase. Each pattern has an explicit `## Triggers` section — keywords, phases, and task types that activate it — so agents load only the context they need.
 
 **Architecture & Code Quality**
 `complexity-classifier` · `model-routing` · `navigation-rules` · `self-validation` · `compliance-checker` · `context-management` · `graceful-degradation` · `feedback-loop` · `api-contract-verification`
@@ -341,6 +343,7 @@ Run individual agents without a full pipeline:
 |---|---|
 | `status` / `where am i` | Shows current pipeline, phase, progress, and exact next step |
 | `help` | Context-aware help — adapts output to active pipeline and phase |
+| `brief helper` / `buat brief` | Guided 7-step Q&A → produces a pipeline-ready brief for Greenfield, Brownfield, or Bugfix |
 | `security review` | 10-point iOS security scan: Keychain, ATS, hardcoded secrets, biometric flow |
 | `tech debt` | 9-category Swift debt report: force unwrap, `@MainActor` misuse, `ObservableObject` leftovers |
 | `apple docs check` | Live Apple documentation check — verifies all APIs in the current spec or code against your deployment target using real docs, not model knowledge |
@@ -478,9 +481,8 @@ ios-pilot is honest about what it does not yet support:
 | **Claude Code CLI required** | Does not run in the Claude web interface or API directly — requires the `claude` CLI |
 | **xcodegen required in Sandbox Mode** | Sandbox Mode needs `xcodegen` to produce an `.xcodeproj`. Project Mode uses your existing project |
 | **Not validated at scale** | Tested on features up to ~10 files. Large projects (50+ files, complex dependency graphs) may surface edge cases |
-| **Learning system needs real data** | The Learning Collector is built and tested — but no real PR has been merged yet. Value is proven in design, not production |
+| **Learning system in early use** | The Learning Collector is built and battle-tested — first draft PRs from real runs are pending community review |
 | **Pipeline E does not generate tests** | Micro edits skip test generation by design. Run the full pipeline if test coverage is required |
-| **Project Mode: git branch not auto-created** | In Project Mode, the agent works on the current branch. Always create a feature branch before running |
 
 ---
 
@@ -500,6 +502,9 @@ See [CHANGELOG.md](CHANGELOG.md) for full history.
 
 | Version | Highlights |
 |---|---|
+| **1.0.0** | **All 5 pipelines verified end-to-end. Fast Mode (≤20 score). `brief-helper` command. Project Mode git-safety + agent branch. Learning Collector battle-tested.** |
+| 0.17.0 | Pipeline D (Bugfix) tested: D1 RCA → D2 BUGFIX-tagged fix → D3 validator. Project Mode tested: G2/G3 gates + Phase 0 Codebase Reader + agent branch auto-creation. Pipeline B (Migration) tested: M1→M5 full run, UIKit→SwiftUI parity verified |
+| 0.16.0 | Pipeline C (Brownfield) tested end-to-end: B0→B5, 9→13 tests. Context restore verified. `brief-helper` guided Q&A command. Fast Mode for score ≤ 20 (skip Plan Mode). Learning Collector: 5 eligible learnings from real run |
 | 0.15.2 | Battle-tested fixes from real Pipeline A run: `nonisolated init()` pattern, hardened `project.yml` template, `pilot test` auto-detects stale xcodeproj, C-3 false positive fixed, graceful degradation `// AGENT-FLAG:` rules |
 | 0.15.1 | `pilot` CLI (7 commands, machine-readable output), 35 patterns with explicit Triggers, `swift-concurrency.md` + `observable-migration.md` gap fills, `apple docs check` via live Sosumi MCP |
 | 0.15.0 | Smart model downgrade: Phase 2 Sonnet for SIMPLE, Opus for COMPLEX — ~40% cost reduction for Pro subscribers |
@@ -510,7 +515,4 @@ See [CHANGELOG.md](CHANGELOG.md) for full history.
 | 0.10.0 | Phase 4.1 test run, ShapeStyle/`@MainActor` in Fix Catalogue, Xcode 15+ target stack |
 | 0.9.0 | Component library, 14-pattern auto-fix loop, complete compilable login example |
 | 0.8.0 | Push notifications, analytics, persistence, feature flags, deep links, crash reporting |
-| 0.7.0 | Secrets management: xcconfig, AppConfiguration, KeychainHelper |
-| 0.6.0 | Network layer, error handling, localization, accessibility, CI/CD |
-| 0.5.0 | Status/help commands, pipeline detector, context restore |
-| 0.3.0 | Four full pipelines, security review, tech debt scan |
+| 0.3.0–0.7.0 | Four full pipelines, security review, tech debt scan, secrets management, network layer, CI/CD |

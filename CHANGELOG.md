@@ -5,6 +5,31 @@ Format: [version] — date — description
 
 ---
 
+## [1.0.0] — 2026-04-17
+
+### Milestone — All 5 pipelines verified end-to-end
+
+ios-pilot 1.0.0 marks the first release where every pipeline has been run
+end-to-end with real code, real build, and real tests — not just defined.
+
+**Pipeline verification status at 1.0.0:**
+- Pipeline A (Greenfield) ✅ — counter-feature: spec → code → build → 13/13 tests
+- Pipeline B (Migration) ✅ — UIKit CounterViewController → SwiftUI: M1→M5, 9/9 parity tests
+- Pipeline C (Brownfield) ✅ — "add reset button": B0→B5, baseline 9 → final 13 tests
+- Pipeline D (Bugfix) ✅ — `reset()` logic bug: D1 RCA → D2 BUGFIX-tagged fix → D3 validator
+- Pipeline E (Micro) ✅ — TRIVIAL pre-check + 3-step flow (design-verified)
+
+**Project Mode verified:**
+- G2 (Repo Identity): agent repo ≠ target repo ✅
+- G3 (Build Tool): `project.yml` → `xcodegen_then_xcodebuild` ✅
+- Phase 0 Codebase Reader: `project-context.md` with conventions + infra ✅
+- Agent branch auto-creation: `agent/<feature-slug>-<timestamp>` ✅
+- Full change cycle on agent branch: build ✅, 15/15 tests ✅
+
+**No breaking changes from 0.17.0.** All `.agent/` file paths and pilot CLI commands are stable.
+
+---
+
 ## [0.17.0] — 2026-04-17
 
 ### Added — Pipeline D, Project Mode, and Pipeline B all verified end-to-end
