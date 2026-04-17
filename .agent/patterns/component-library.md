@@ -1,5 +1,11 @@
 # Pattern: Component Library
 
+## Triggers
+Load this pattern when:
+- Keywords: `AppButton`, `AppTextField`, `AppSecureField`, `AppCard`, `AppLoadingOverlay`, `AppErrorBanner`, `AppEmptyState`, `component`, `design system`, `button`, `text field`, `loading state`, `error banner`
+- Phases: Phase 3 Code Gen — any View file task
+- Task types: any task writing a SwiftUI View that has user interaction, forms, or feedback states
+
 Generated once as `TASK-CL` (Component Library), depended on by all View tasks.
 
 ---

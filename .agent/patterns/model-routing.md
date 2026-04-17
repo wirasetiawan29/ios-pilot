@@ -1,5 +1,11 @@
 # Pattern: Model Routing
 
+## Triggers
+Load this pattern when:
+- Keywords: `model selection`, `Opus`, `Sonnet`, `Haiku`, `complexity scoring`, `SIMPLE`, `COMPLEX`, `subagent`, `spawn`, `which model`
+- Phases: always — every subagent spawn in every pipeline must reference this
+- Task types: orchestration, any decision to spawn a subagent
+
 Cost-optimized model selection per phase and task type.
 Every subagent spawn MUST specify a model based on this table.
 

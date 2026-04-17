@@ -92,13 +92,7 @@ If ALL 5 signals true → route to **Pipeline E — Micro** immediately. Skip St
 | ≥ 40 | COMPLEX | Full pipeline, Opus for reasoning phases |
 
 **Step 2 — Model Routing:** Every subagent spawn MUST specify a model.
-See `.agent/patterns/model-routing.md` for full table. Quick reference:
-
-| Task | Model |
-|---|---|
-| Spec/Plan reasoning, ViewModel gen, diagnostics | Opus |
-| Code gen (non-ViewModel), review, orchestration | Sonnet |
-| File writing, tests, boilerplate | Haiku |
+See `.agent/patterns/model-routing.md` — full routing table with per-phase rules and override conditions.
 
 **Step 3 — Parallelism:** Spawn independent tasks in one message. Wait for all before next wave.
 
@@ -110,6 +104,9 @@ See `.agent/patterns/model-routing.md` for full table. Quick reference:
 [0]   Codebase Reader   CONDITIONAL  — skip if .state/project-context.md exists (<30 days)
 [1]   Spec Parser       SEQUENTIAL   — .agent/01-spec-parser.md
 [2]   Task Breakdown    SEQUENTIAL   — .agent/02-task-breakdown.md
+[2.5] Apple Docs Check  CONDITIONAL  — .agent/commands/apple-docs-check.md · ADVISORY
+                                       run if spec references SwiftData, App Intents, @Observable,
+                                       NavigationStack, or any iOS 16+ framework. Non-blocking.
 [3]   Code Gen          PARALLEL     — .agent/03-code-gen.md · wave-based dependency graph
 [3.5] Build Validator   SEQUENTIAL   — .agent/06-build-validator.md · xcodegen → swiftc/xcodebuild
 [3.6] Visual Check      CONDITIONAL  — .agent/patterns/visual-verification.md
@@ -226,6 +223,8 @@ Also includes: state file recovery protocol for missing or corrupted `.state/` f
 | `.agent/patterns/context-management.md` | Any file over 200 lines |
 | `.agent/patterns/self-validation.md` | Before saving any generated file |
 | `.agent/patterns/compliance-checker.md` | After Phase 3 — grep-based Hard Rule verification before build |
+| `.agent/patterns/swift-concurrency.md` | Every ViewModel, Repository, Service with async operations |
+| `.agent/patterns/observable-migration.md` | Every ViewModel — enforce @Observable, detect legacy ObservableObject |
 | `.agent/patterns/micro-pipeline.md` | TRIVIAL requests — single UI element on existing screen |
 | `.agent/patterns/learning-collector.md` | After every pipeline completes — advisory, non-blocking |
 | `.agent/patterns/graceful-degradation.md` | When any parallel subagent fails |
@@ -269,6 +268,26 @@ to find the last completed step. Do not re-run completed tasks.
 | "create MR" / "open PR" / "push and create MR" | `.agent/patterns/git-integration.md` |
 | "setup ci" / "add ci/cd" / "github actions" / "fastlane" | `.agent/patterns/cicd.md` |
 | "submit learnings" / "send learnings" | `.agent/commands/submit-learnings.md` |
+| "apple docs check" / "check apple docs" / "api version check" | `.agent/commands/apple-docs-check.md` |
+
+---
+
+## CLI Interface
+
+Use `pilot` as the canonical interface for all build, test, and compliance operations.
+Do NOT construct raw `xcodebuild` commands — use `pilot` instead.
+
+| Command | Replaces |
+|---|---|
+| `pilot build` | `xcodegen generate && xcodebuild build …` |
+| `pilot test` | `xcodebuild test -destination … -scheme …` |
+| `pilot compliance` | Running all 11 C-* grep checks manually |
+| `pilot status` | Reading `.state/` files to find pipeline progress |
+| `pilot doctor` | Manual dependency verification |
+| `pilot clean` | `rm -rf ~/Library/Developer/Xcode/DerivedData/<project>` |
+| `pilot update` | `git pull --ff-only origin main` |
+
+Output lines prefixed `## PILOT_*_RESULT:` are machine-readable — parse these for pass/fail verdicts.
 
 ---
 
@@ -282,7 +301,7 @@ to find the last completed step. Do not re-run completed tasks.
 | `glab` | GitLab MR creation | `brew install glab` |
 
 If `xcodegen` missing → flag under `## Risks` in plan report.
-If `project.yml` exists → always run `xcodegen generate` before any `xcodebuild` call.
+If `project.yml` exists → always run `pilot build` (handles xcodegen automatically).
 
 ---
 

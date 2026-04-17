@@ -73,6 +73,10 @@ If missing: check `sources:` in `project.yml`, re-run `xcodegen generate`, clean
 
 ## Minimal project.yml template
 
+Use xcodegen's `info.properties` to auto-generate Info.plist — **never** point `INFOPLIST_FILE`
+to a manually written plist. Manual plists frequently missing `CFBundleVersion` or
+`CFBundleIdentifier`, causing simulator install failures at test time.
+
 ```yaml
 name: MyApp
 
@@ -80,6 +84,11 @@ options:
   bundleIdPrefix: com.example
   deploymentTarget:
     iOS: "17.0"
+  xcodeVersion: "15.0"
+
+settings:
+  SWIFT_VERSION: "5.9"
+  ENABLE_PREVIEWS: YES
 
 targets:
   MyApp:
@@ -87,35 +96,37 @@ targets:
     platform: iOS
     deploymentTarget: "17.0"
     sources:
-      - path: MyAppApp.swift
-      - path: Theme
-      - path: Models
-      - path: Features
-      - path: Assets.xcassets       # required: include asset catalog here
+      - Sources
     info:
-      path: MyApp/Info.plist
+      # xcodegen generates Info.plist from these properties — no manual plist needed
+      path: Sources/App/Info.plist
       properties:
         CFBundleDisplayName: My App
+        CFBundleVersion: "1"
+        CFBundleShortVersionString: "1.0"
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
     settings:
-      base:
-        SWIFT_VERSION: "5.0"
-        PRODUCT_BUNDLE_IDENTIFIER: com.example.myapp
-        DEVELOPMENT_TEAM: ""
-    dependencies:
-      - framework: MapKit.framework  # only if MapKit is used
-        embed: false
+      PRODUCT_BUNDLE_IDENTIFIER: com.example.myapp
+      DEVELOPMENT_TEAM: ""
 
   MyAppTests:
     type: bundle.unit-test
     platform: iOS
+    deploymentTarget: "17.0"
     sources:
-      - path: ../04-tests
-    settings:
-      base:
-        SWIFT_VERSION: "5.0"
+      - Tests
     dependencies:
       - target: MyApp
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.example.myapp.tests
 ```
+
+**Required fields in `info.properties` — missing any causes simulator install failure:**
+- `CFBundleVersion` — build number, must be a string (e.g. `"1"`)
+- `CFBundleShortVersionString` — marketing version (e.g. `"1.0"`)
+- `UILaunchScreen` — required for iOS 13+, use `{}` for default
+
+**Do NOT use `INFOPLIST_FILE` + manual plist.** If you must use a manual plist,
+ensure it contains all keys above with `$(PRODUCT_BUNDLE_IDENTIFIER)` for bundle ID.

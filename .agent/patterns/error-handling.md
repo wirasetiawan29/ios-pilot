@@ -1,5 +1,11 @@
 # Pattern: Error Handling
 
+## Triggers
+Load this pattern when:
+- Keywords: `error`, `ErrorBanner`, `localizedDescription`, `alert`, `failure`, `throw`, `Result`, `network error`, `validation error`, `catch`, `async throws`
+- Phases: Phase 3 Code Gen — any file with async calls, network calls, or user-facing error states
+- Task types: ViewModel (error propagation), Repository/Service (typed error mapping), any View showing error feedback
+
 ---
 
 ## Error Hierarchy

@@ -1,5 +1,11 @@
 # Pattern: Secrets Management
 
+## Triggers
+Load this pattern when:
+- Keywords: `Keychain`, `secret`, `token`, `API key`, `UserDefaults`, `xcconfig`, `AppConfiguration`, `credential`, `auth token`, `refresh token`, `sensitive data`, `password`
+- Phases: Phase 1 Spec Parser (if spec mentions API calls or authentication), Phase 3 Code Gen (any Repository or Service with network calls)
+- Task types: authentication, login, any feature that stores or transmits credentials
+
 ---
 
 ## The Golden Rule

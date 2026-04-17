@@ -1,0 +1,542 @@
+#!/usr/bin/env bash
+# pilot — ios-pilot CLI wrapper
+# Canonical interface for build, test, compliance, and pipeline operations.
+# Agents must use pilot commands instead of constructing raw xcodebuild calls.
+
+set -euo pipefail
+
+PILOT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+STATE_DIR=""
+PROJECT_YML=""
+XCODEPROJ=""
+SCHEME=""
+# Auto-detect best available simulator: prefer iPhone 15/16 Pro, fall back to first available iPhone
+_detect_simulator() {
+  local sim
+  for name in "iPhone 16 Pro" "iPhone 16" "iPhone 15 Pro" "iPhone 15" "iPhone 14 Pro" "iPhone 14" "iPhone 13"; do
+    sim="$(xcrun simctl list devices available 2>/dev/null | grep "$name" | head -1 | grep -o '[A-F0-9-]\{36\}')"
+    if [[ -n "$sim" ]]; then
+      echo "platform=iOS Simulator,id=$sim"
+      return
+    fi
+  done
+  # Last resort: first available iPhone simulator
+  sim="$(xcrun simctl list devices available 2>/dev/null | grep "iPhone" | head -1 | grep -o '[A-F0-9-]\{36\}')"
+  if [[ -n "$sim" ]]; then
+    echo "platform=iOS Simulator,id=$sim"
+  else
+    echo "platform=iOS Simulator,name=iPhone 15 Pro,OS=latest"
+  fi
+}
+SIMULATOR="$(_detect_simulator)"
+
+# ── Colors ────────────────────────────────────────────────────────────────────
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+BOLD='\033[1m'
+NC='\033[0m'
+
+log_ok()   { echo -e "  ${GREEN}[OK]${NC}    $1"; }
+log_fail() { echo -e "  ${RED}[FAIL]${NC}  $1"; }
+log_warn() { echo -e "  ${YELLOW}[WARN]${NC}  $1"; }
+log_info() { echo -e "  ${BLUE}[INFO]${NC}  $1"; }
+log_pass() { echo -e "  ${GREEN}[PASS]${NC}  $1"; }
+
+# ── Mode detection ────────────────────────────────────────────────────────────
+detect_mode() {
+  PROJECT_YML="$(find . -maxdepth 2 -name "project.yml" 2>/dev/null | head -1)"
+  XCODEPROJ="$(find . -maxdepth 2 -name "*.xcodeproj" -not -path "*/DerivedData/*" 2>/dev/null | head -1)"
+
+  if [[ -n "$PROJECT_YML" ]]; then
+    local feature_dir
+    feature_dir="$(cd "$(dirname "$PROJECT_YML")" && pwd)"
+    STATE_DIR="$feature_dir/.state"
+    # Read scheme name from project.yml `name:` field — more reliable than dirname
+    local yml_name
+    yml_name="$(grep '^name:' "$PROJECT_YML" | head -1 | sed 's/^name:[[:space:]]*//' | tr -d '"' )"
+    SCHEME="${yml_name:-$(basename "$feature_dir")}"
+  elif [[ -n "$XCODEPROJ" ]]; then
+    local proj_dir
+    proj_dir="$(dirname "$XCODEPROJ")"
+    STATE_DIR="$proj_dir/.state"
+    SCHEME="$(basename "$XCODEPROJ" .xcodeproj)"
+  else
+    # Sandbox mode — look in output/
+    local active_slug
+    active_slug="$(ls -t output/ 2>/dev/null | head -1)"
+    if [[ -n "$active_slug" ]]; then
+      STATE_DIR="output/$active_slug/.state"
+      PROJECT_YML="output/$active_slug/03-code/project.yml"
+      XCODEPROJ="$(find "output/$active_slug" -maxdepth 3 -name "*.xcodeproj" 2>/dev/null | head -1)"
+      SCHEME="$active_slug"
+    fi
+  fi
+
+  mkdir -p "${STATE_DIR:-output/.state}"
+}
+
+# ── pilot build ───────────────────────────────────────────────────────────────
+cmd_build() {
+  detect_mode
+  echo ""
+  echo -e "${BOLD}pilot build${NC}"
+  echo "────────────────────────────────────────────"
+
+  local log_file="${STATE_DIR}/build-log.txt"
+  mkdir -p "$(dirname "$log_file")"
+
+  # Step 1 — xcodegen if project.yml present
+  if [[ -f "$PROJECT_YML" ]]; then
+    local proj_dir
+    proj_dir="$(dirname "$PROJECT_YML")"
+    log_info "Running xcodegen in $proj_dir"
+    if ! (cd "$proj_dir" && xcodegen generate --quiet 2>&1 | tee -a "$log_file"); then
+      log_fail "xcodegen failed"
+      echo "## PILOT_BUILD_RESULT: FAIL_XCODEGEN" | tee -a "$log_file"
+      exit 2
+    fi
+    XCODEPROJ="$(find "$proj_dir" -maxdepth 1 -name "*.xcodeproj" | head -1)"
+    SCHEME="$(basename "$XCODEPROJ" .xcodeproj)"
+  fi
+
+  if [[ -z "$XCODEPROJ" ]]; then
+    log_fail "No .xcodeproj found. Run from a directory containing project.yml or .xcodeproj"
+    exit 2
+  fi
+
+  # Step 2 — xcodebuild build
+  log_info "Building scheme: $SCHEME"
+  local proj_dir
+  proj_dir="$(dirname "$XCODEPROJ")"
+
+  local result
+  if (cd "$proj_dir" && xcodebuild build \
+      -project "$(basename "$XCODEPROJ")" \
+      -scheme "$SCHEME" \
+      -destination "$SIMULATOR" \
+      -configuration Debug \
+      CODE_SIGNING_ALLOWED=NO \
+      2>&1 | tee "$log_file" | grep -E "error:|warning:|BUILD (SUCCEEDED|FAILED)"); then
+    result=0
+  else
+    result=$?
+  fi
+
+  # Determine verdict
+  if grep -q "BUILD SUCCEEDED" "$log_file"; then
+    log_ok "Build succeeded"
+    echo "## PILOT_BUILD_RESULT: SUCCESS" | tee -a "$log_file"
+    exit 0
+  else
+    local error_count
+    error_count=$(grep -c "error:" "$log_file" 2>/dev/null || echo "?")
+    log_fail "Build failed — $error_count error(s). See $log_file"
+    echo "## PILOT_BUILD_RESULT: FAIL_COMPILE errors=$error_count" | tee -a "$log_file"
+    grep "error:" "$log_file" | head -10
+    exit 1
+  fi
+}
+
+# ── pilot test ────────────────────────────────────────────────────────────────
+cmd_test() {
+  detect_mode
+  echo ""
+  echo -e "${BOLD}pilot test${NC}"
+  echo "────────────────────────────────────────────"
+
+  local log_file="${STATE_DIR}/test-log.txt"
+  mkdir -p "$(dirname "$log_file")"
+
+  # Re-run xcodegen if project.yml is newer than xcodeproj (or xcodeproj missing)
+  if [[ -n "$PROJECT_YML" ]]; then
+    if [[ -z "$XCODEPROJ" ]] || [[ "$PROJECT_YML" -nt "$XCODEPROJ" ]]; then
+      log_info "project.yml changed — regenerating xcodeproj..."
+      (cd "$(dirname "$PROJECT_YML")" && xcodegen generate --quiet 2>&1) || {
+        log_fail "xcodegen failed"; exit 2
+      }
+      detect_mode
+    fi
+  fi
+
+  if [[ -z "$XCODEPROJ" ]]; then
+    log_fail "No .xcodeproj found"
+    exit 2
+  fi
+
+  local proj_dir
+  proj_dir="$(dirname "$XCODEPROJ")"
+
+  log_info "Testing scheme: $SCHEME"
+  (cd "$proj_dir" && xcodebuild test \
+      -project "$(basename "$XCODEPROJ")" \
+      -scheme "$SCHEME" \
+      -destination "$SIMULATOR" \
+      CODE_SIGNING_ALLOWED=NO \
+      2>&1 | tee "$log_file" | grep -E "Test Case|error:|TEST (SUCCEEDED|FAILED)") || true
+
+  # Parse counts from xcodebuild output: "Executed N tests, with N failures"
+  local passed=0 failed=0
+  local summary_line
+  summary_line="$(grep "Executed [0-9]* test" "$log_file" 2>/dev/null | tail -1)"
+  if [[ -n "$summary_line" ]]; then
+    passed="$(echo "$summary_line" | grep -o 'Executed [0-9]*' | grep -o '[0-9]*')"
+    failed="$(echo "$summary_line" | grep -o 'with [0-9]* failure' | grep -o '[0-9]*')"
+    failed="${failed:-0}"
+    passed="${passed:-0}"
+    passed=$(( passed - failed ))
+  fi
+
+  if grep -q "TEST SUCCEEDED" "$log_file"; then
+    log_ok "$passed test(s) passed"
+    echo "## PILOT_TEST_RESULT: SUCCESS passed=$passed failed=0" | tee -a "$log_file"
+    exit 0
+  else
+    log_fail "$failed test(s) failed ($passed passed). See $log_file"
+    echo "## PILOT_TEST_RESULT: FAIL passed=$passed failed=$failed" | tee -a "$log_file"
+    grep -E "error:|failed" "$log_file" | grep -v "^$\|^    /" | head -10
+    exit 1
+  fi
+}
+
+# ── pilot compliance ──────────────────────────────────────────────────────────
+cmd_compliance() {
+  detect_mode
+  echo ""
+  echo -e "${BOLD}pilot compliance${NC} — C-1 through C-11"
+  echo "────────────────────────────────────────────"
+
+  # Determine sources dir
+  local sources_dir=""
+  if [[ -n "$PROJECT_YML" ]]; then
+    sources_dir="$(dirname "$PROJECT_YML")/Sources"
+  else
+    sources_dir="$(find . -maxdepth 4 -type d -name "Sources" -not -path "*/DerivedData/*" | head -1)"
+  fi
+
+  if [[ -z "$sources_dir" ]] || [[ ! -d "$sources_dir" ]]; then
+    log_warn "No Sources/ directory found — compliance check skipped"
+    exit 0
+  fi
+
+  local violations=0
+
+  run_check() {
+    local id="$1" desc="$2"
+    shift 2
+    local result
+    result=$("$@" 2>/dev/null || true)
+    if [[ -z "$result" ]]; then
+      log_pass "$id: $desc"
+    else
+      log_fail "$id: $desc"
+      echo "$result" | sed 's/^/         /'
+      ((violations++)) || true
+    fi
+  }
+
+  run_check "C-1"  "No print() calls" \
+    bash -c "grep -rn 'print(' '$sources_dir' --include='*.swift' | grep -v '// '"
+
+  run_check "C-2"  "No force unwraps" \
+    bash -c "grep -rn '[a-zA-Z0-9_)]!' '$sources_dir' --include='*.swift' | grep -v '!=' | grep -v '^\s*//' | grep -v 'fatalError\|#Preview'"
+
+  run_check "C-3"  "No hardcoded Color values" \
+    bash -c "grep -rn 'Color(red:\|Color(hue:\|UIColor(red:' '$sources_dir' --include='*.swift' | grep -v 'Theme.swift'"
+
+  run_check "C-4"  "No hardcoded numeric font sizes" \
+    bash -c "grep -rn '\.font(.system(size:' '$sources_dir' --include='*.swift' | grep -v 'Theme.swift\|// '"
+
+  run_check "C-5"  "NavigationStack only in root view" \
+    bash -c "grep -rn 'NavigationStack' '$sources_dir' --include='*.swift' | grep -v 'App\.swift\|RootView\.swift\|#Preview\|// '"
+
+  run_check "C-6"  "No ObservableObject / @Published" \
+    bash -c "grep -rn 'ObservableObject\|@Published' '$sources_dir' --include='*.swift'"
+
+  run_check "C-7"  "No URLSession in ViewModel files" \
+    bash -c "grep -rn 'URLSession' '$sources_dir/Features' --include='*.swift' 2>/dev/null | grep -v 'Repository\|Service\|// '"
+
+  run_check "C-8"  "No auth token in UserDefaults" \
+    bash -c "grep -rni 'userdefaults.*token\|token.*userdefaults\|userdefaults.*key\|userdefaults.*secret' '$sources_dir' --include='*.swift'"
+
+  run_check "C-9"  "No unresolved TODO" \
+    bash -c "grep -rn '// TODO:' '$sources_dir' --include='*.swift'"
+
+  # C-10 — every View file has #Preview
+  local c10_result=""
+  while IFS= read -r f; do
+    if ! grep -q "#Preview" "$f"; then
+      c10_result+="MISSING #Preview: $f\n"
+    fi
+  done < <(grep -rl "struct [A-Za-z]*: View\|class [A-Za-z]*: View" "$sources_dir" --include="*.swift" 2>/dev/null)
+
+  if [[ -z "$c10_result" ]]; then
+    log_pass "C-10: Every View has #Preview"
+  else
+    log_fail "C-10: Missing #Preview blocks"
+    echo -e "$c10_result" | sed 's/^/         /'
+    ((violations++)) || true
+  fi
+
+  run_check "C-11" "No direct error.localizedDescription to UI" \
+    bash -c "grep -rn 'errorMessage = error.localizedDescription\|= error.localizedDescription' '$sources_dir' --include='*.swift'"
+
+  echo ""
+  echo "────────────────────────────────────────────"
+  if [[ $violations -eq 0 ]]; then
+    log_ok "All compliance checks passed"
+    echo "## PILOT_COMPLIANCE_RESULT: PASS violations=0"
+    exit 0
+  else
+    log_fail "$violations violation(s) found — fix before build"
+    echo "## PILOT_COMPLIANCE_RESULT: FAIL violations=$violations"
+    exit 1
+  fi
+}
+
+# ── pilot status ──────────────────────────────────────────────────────────────
+cmd_status() {
+  detect_mode
+  echo ""
+  echo -e "${BOLD}pilot status${NC}"
+  echo "────────────────────────────────────────────"
+
+  local state_base="output"
+  local active_slug
+  active_slug="$(ls -t "$state_base" 2>/dev/null | head -1)"
+
+  if [[ -z "$active_slug" ]]; then
+    log_warn "No active pipeline found in output/"
+    echo "## PILOT_STATUS_RESULT: NO_PIPELINE"
+    exit 1
+  fi
+
+  local state_dir="$state_base/$active_slug/.state"
+
+  if [[ ! -d "$state_dir" ]]; then
+    log_warn "State directory not found: $state_dir"
+    echo "## PILOT_STATUS_RESULT: NO_STATE"
+    exit 1
+  fi
+
+  # Determine pipeline from state files
+  local pipeline="Unknown"
+  local phase="Unknown"
+  local progress=""
+  local next_step=""
+  local blockers="None"
+
+  [[ -f "$state_dir/complexity.md" ]] && pipeline="A | Greenfield"
+  [[ -f "$state_dir/b00-baseline-tests.md" ]] && pipeline="C | Brownfield"
+  [[ -f "$state_dir/d01-rca.md" ]] && pipeline="D | Bugfix"
+  [[ -f "$state_dir/m01-discovery.md" ]] && pipeline="B | Migration"
+
+  # Find last completed phase
+  for p in "05-review" "04-unit-test" "03-code-gen" "03-compliance" "02-tasks" "01-spec" "00-codebase"; do
+    if [[ -f "$state_dir/$p-progress.md" ]]; then
+      phase="$p"
+      progress="$(head -1 "$state_dir/$p-progress.md" 2>/dev/null || echo '')"
+      break
+    fi
+  done
+
+  [[ -f "$state_dir/revision-requests.md" ]] && blockers="Revision requests pending — see $state_dir/revision-requests.md"
+
+  echo ""
+  echo "  Pipeline:  $pipeline"
+  echo "  Feature:   $active_slug"
+  echo "  Phase:     $phase"
+  echo "  Progress:  ${progress:-unknown}"
+  echo "  Blockers:  $blockers"
+  echo ""
+  echo "## PILOT_STATUS_RESULT: OK pipeline=$pipeline phase=$phase"
+  exit 0
+}
+
+# ── pilot clean ───────────────────────────────────────────────────────────────
+cmd_clean() {
+  detect_mode
+  echo ""
+  echo -e "${BOLD}pilot clean${NC}"
+  echo "────────────────────────────────────────────"
+
+  local cleaned=0
+
+  # Clean project-local DerivedData only
+  if [[ -n "$XCODEPROJ" ]]; then
+    local proj_name
+    proj_name="$(basename "$XCODEPROJ" .xcodeproj)"
+    local derived_path="$HOME/Library/Developer/Xcode/DerivedData"
+    local proj_derived
+    proj_derived="$(find "$derived_path" -maxdepth 1 -name "${proj_name}-*" -type d 2>/dev/null | head -1)"
+    if [[ -n "$proj_derived" ]]; then
+      rm -rf "$proj_derived"
+      log_ok "Removed DerivedData: $(basename "$proj_derived")"
+      cleaned=1
+    fi
+  fi
+
+  # Clean build folder inside project if present
+  if [[ -n "$XCODEPROJ" ]] && [[ -d "$(dirname "$XCODEPROJ")/build" ]]; then
+    rm -rf "$(dirname "$XCODEPROJ")/build"
+    log_ok "Removed local build/ folder"
+    cleaned=1
+  fi
+
+  if [[ $cleaned -eq 0 ]]; then
+    log_info "Nothing to clean"
+  fi
+
+  echo "## PILOT_CLEAN_RESULT: OK"
+  exit 0
+}
+
+# ── pilot doctor ──────────────────────────────────────────────────────────────
+cmd_doctor() {
+  echo ""
+  echo -e "${BOLD}pilot doctor${NC}"
+  echo "────────────────────────────────────────────"
+
+  local required_missing=0
+  local optional_missing=0
+
+  check_required() {
+    local name="$1" cmd="$2" install="$3"
+    if command -v "$cmd" &>/dev/null; then
+      log_ok "$name ($(command -v "$cmd"))"
+    else
+      log_fail "$name — MISSING. Install: $install"
+      ((required_missing++)) || true
+    fi
+  }
+
+  check_optional() {
+    local name="$1" cmd="$2" install="$3"
+    if command -v "$cmd" &>/dev/null; then
+      log_ok "$name (optional)"
+    else
+      log_warn "$name — not found (optional). Install: $install"
+      ((optional_missing++)) || true
+    fi
+  }
+
+  echo ""
+  echo "  Required dependencies:"
+  check_required "Claude Code"  "claude"    "https://claude.ai/code"
+  check_required "Xcode"        "xcodebuild" "Install from Mac App Store"
+  check_required "xcodegen"     "xcodegen"   "brew install xcodegen"
+
+  echo ""
+  echo "  Xcode version:"
+  local xcode_ver
+  xcode_ver="$(xcodebuild -version 2>/dev/null | head -1 || echo "not found")"
+  local xcode_ok_pattern="Xcode 1[5-9]"
+  local xcode_future_pattern="Xcode [2-9]"
+  if [[ "$xcode_ver" =~ $xcode_ok_pattern ]] || [[ "$xcode_ver" =~ $xcode_future_pattern ]]; then
+    log_ok "$xcode_ver (iOS 17+ compatible)"
+  else
+    log_warn "$xcode_ver — ios-pilot requires Xcode 15+"
+  fi
+
+  echo ""
+  echo "  Available simulators (iOS 17+):"
+  local sims
+  sims="$(xcrun simctl list devices available 2>/dev/null | grep "iOS 1[7-9]\|iOS [2-9]" | head -5 || echo "")"
+  if [[ -n "$sims" ]]; then
+    log_ok "Simulators found"
+    echo "$sims" | sed 's/^/         /'
+  else
+    log_warn "No iOS 17+ simulators found — download from Xcode → Platforms"
+  fi
+
+  echo ""
+  echo "  Optional dependencies:"
+  check_optional "gh (GitHub CLI)"   "gh"   "brew install gh"
+  check_optional "glab (GitLab CLI)" "glab" "brew install glab"
+
+  echo ""
+  echo "────────────────────────────────────────────"
+  if [[ $required_missing -gt 0 ]]; then
+    log_fail "$required_missing required dependency/dependencies missing"
+    echo "## PILOT_DOCTOR_RESULT: FAIL required_missing=$required_missing"
+    exit 1
+  elif [[ $optional_missing -gt 0 ]]; then
+    log_ok "All required dependencies present"
+    log_warn "$optional_missing optional dependency/dependencies missing"
+    echo "## PILOT_DOCTOR_RESULT: WARN optional_missing=$optional_missing"
+    exit 2
+  else
+    log_ok "All dependencies present"
+    echo "## PILOT_DOCTOR_RESULT: OK"
+    exit 0
+  fi
+}
+
+# ── pilot update ──────────────────────────────────────────────────────────────
+cmd_update() {
+  echo ""
+  echo -e "${BOLD}pilot update${NC}"
+  echo "────────────────────────────────────────────"
+
+  local current_version
+  current_version="$(cat "$PILOT_ROOT/VERSION" 2>/dev/null || echo "unknown")"
+  log_info "Current version: $current_version"
+
+  if ! git -C "$PILOT_ROOT" remote get-url origin &>/dev/null; then
+    log_fail "Not a git repository — cannot update"
+    echo "## PILOT_UPDATE_RESULT: FAIL"
+    exit 1
+  fi
+
+  if git -C "$PILOT_ROOT" pull --ff-only origin main 2>&1; then
+    local new_version
+    new_version="$(cat "$PILOT_ROOT/VERSION" 2>/dev/null || echo "unknown")"
+    if [[ "$new_version" != "$current_version" ]]; then
+      log_ok "Updated: $current_version → $new_version"
+    else
+      log_ok "Already at latest version ($current_version)"
+    fi
+    echo "## PILOT_UPDATE_RESULT: OK version=$new_version"
+    exit 0
+  else
+    log_fail "git pull failed — check network or resolve conflicts manually"
+    echo "## PILOT_UPDATE_RESULT: FAIL"
+    exit 1
+  fi
+}
+
+# ── Usage ─────────────────────────────────────────────────────────────────────
+cmd_help() {
+  echo ""
+  echo -e "${BOLD}pilot${NC} — ios-pilot CLI"
+  echo ""
+  echo "  pilot build        Run xcodegen + xcodebuild. Logs to .state/build-log.txt"
+  echo "  pilot test         Run xcodebuild test. Logs to .state/test-log.txt"
+  echo "  pilot compliance   Run C-1 through C-11 grep checks against Sources/"
+  echo "  pilot status       Show current pipeline phase and progress"
+  echo "  pilot clean        Remove project-local DerivedData and build artifacts"
+  echo "  pilot doctor       Verify all required dependencies are installed"
+  echo "  pilot update       Pull latest ios-pilot from origin main"
+  echo ""
+  echo "  All commands output a machine-readable ## PILOT_*_RESULT: line"
+  echo "  for agent parsing alongside human-readable output."
+  echo ""
+}
+
+# ── Dispatch ──────────────────────────────────────────────────────────────────
+case "${1:-help}" in
+  build)      cmd_build      ;;
+  test)       cmd_test       ;;
+  compliance) cmd_compliance ;;
+  status)     cmd_status     ;;
+  clean)      cmd_clean      ;;
+  doctor)     cmd_doctor     ;;
+  update)     cmd_update     ;;
+  help|--help|-h) cmd_help   ;;
+  *)
+    echo "Unknown command: $1"
+    cmd_help
+    exit 1
+    ;;
+esac

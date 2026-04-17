@@ -2,9 +2,9 @@
 
 **Agentic iOS development pipeline — from brief to PR-ready Swift code, entirely inside Claude Code.**
 
-No Python. No separate API key. No extra tooling beyond Xcode and `xcodegen`.
+No Python. No separate API key. No extra tooling beyond Xcode, `xcodegen`, and the included `pilot` CLI.
 
-![Version](https://img.shields.io/badge/version-0.15.0-blue)
+![Version](https://img.shields.io/badge/version-0.15.2-blue)
 ![Swift](https://img.shields.io/badge/Swift-5.9%2B-orange)
 ![iOS](https://img.shields.io/badge/iOS-17%2B-lightgrey)
 ![Xcode](https://img.shields.io/badge/Xcode-15%2B-blue)
@@ -305,10 +305,13 @@ Every generated View is checked against 6 hard navigation rules enforced by both
 
 ## Production Patterns
 
-31 shared patterns run automatically at the right phase. Patterns cover every production concern:
+35 shared patterns run automatically at the right phase. Each pattern has an explicit `## Triggers` section — keywords, phases, and task types that activate it — so agents load only the context they need.
 
 **Architecture & Code Quality**
 `complexity-classifier` · `model-routing` · `navigation-rules` · `self-validation` · `compliance-checker` · `context-management` · `graceful-degradation` · `feedback-loop` · `api-contract-verification`
+
+**Swift & Concurrency**
+`swift-concurrency` · `observable-migration`
 
 **UI & Design**
 `component-library` · `design-tokens` · `accessibility` · `visual-verification`
@@ -340,6 +343,7 @@ Run individual agents without a full pipeline:
 | `help` | Context-aware help — adapts output to active pipeline and phase |
 | `security review` | 10-point iOS security scan: Keychain, ATS, hardcoded secrets, biometric flow |
 | `tech debt` | 9-category Swift debt report: force unwrap, `@MainActor` misuse, `ObservableObject` leftovers |
+| `apple docs check` | Live Apple documentation check — verifies all APIs in the current spec or code against your deployment target using real docs, not model knowledge |
 | `create MR` / `open PR` | Push branch + create GitHub / GitLab MR with generated description |
 | `setup ci` | GitHub Actions CI + deploy workflows + Fastlane Fastfile |
 | `submit learnings` | Create a draft PR to ios-pilot with patterns learned from this pipeline run |
@@ -405,6 +409,36 @@ examples/login-feature/
 
 ---
 
+## pilot CLI
+
+ios-pilot ships with a `pilot` command-line tool at the repo root. Agents use it as the canonical interface for all build, test, and compliance operations — no more constructing raw `xcodebuild` flags from scratch each session.
+
+```bash
+pilot build        # xcodegen + xcodebuild. Logs to .state/build-log.txt
+pilot test         # xcodebuild test. Auto-detects scheme and simulator.
+pilot compliance   # All 11 C-* grep checks against Sources/ in one command
+pilot status       # Current pipeline, phase, progress, and blockers
+pilot clean        # Remove project-local DerivedData
+pilot doctor       # Verify all dependencies are installed
+pilot update       # Pull latest ios-pilot from origin main
+```
+
+Every command outputs a `## PILOT_*_RESULT:` line for reliable agent parsing alongside human-readable output.
+
+```
+## PILOT_TEST_RESULT: SUCCESS passed=9 failed=0
+## PILOT_COMPLIANCE_RESULT: PASS violations=0
+## PILOT_BUILD_RESULT: SUCCESS
+```
+
+Run `pilot doctor` after installation to verify your environment:
+
+```bash
+./pilot doctor
+```
+
+---
+
 ## Requirements
 
 | Tool | Purpose | Install |
@@ -466,6 +500,8 @@ See [CHANGELOG.md](CHANGELOG.md) for full history.
 
 | Version | Highlights |
 |---|---|
+| 0.15.2 | Battle-tested fixes from real Pipeline A run: `nonisolated init()` pattern, hardened `project.yml` template, `pilot test` auto-detects stale xcodeproj, C-3 false positive fixed, graceful degradation `// AGENT-FLAG:` rules |
+| 0.15.1 | `pilot` CLI (7 commands, machine-readable output), 35 patterns with explicit Triggers, `swift-concurrency.md` + `observable-migration.md` gap fills, `apple docs check` via live Sosumi MCP |
 | 0.15.0 | Smart model downgrade: Phase 2 Sonnet for SIMPLE, Opus for COMPLEX — ~40% cost reduction for Pro subscribers |
 | 0.14.0 | Pipeline E — Micro: TRIVIAL pre-check, 3-step flow for single UI edits, Haiku-only, auto-escalation |
 | 0.13.0 | Semi-autonomous learning system: Learning Collector + submit-learnings command, privacy filter, draft PR flow |

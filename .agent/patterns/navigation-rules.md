@@ -1,5 +1,11 @@
 # Pattern: SwiftUI Navigation Rules
 
+## Triggers
+Load this pattern when the task or spec contains any of:
+- Keywords: `NavigationStack`, `NavigationLink`, `navigationDestination`, `fullScreenCover`, `sheet`, `push`, `routing`, `back button`, `modal`, `dismiss`
+- Phases: Phase 1 Spec Parser (Navigation Contract), Phase 3 Code Gen (any View file)
+- Task types: any task that writes a View file or defines screen-to-screen navigation
+
 **Mandatory for every Code Gen agent that writes a View file.**
 Violating any rule = treated as build error. Fix before Phase 4.
 

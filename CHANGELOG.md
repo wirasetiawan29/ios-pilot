@@ -5,6 +5,49 @@ Format: [version] — date — description
 
 ---
 
+## [0.15.2] — 2026-04-18
+
+### Fixed — battle-tested improvements from Pipeline A real run
+
+- `swift-concurrency.md` — R-1 updated with `nonisolated init()` requirement for `@Observable @MainActor` classes; missing this causes compile error when using `@State var vm = ViewModel()` in SwiftUI
+- `project-yml.md` — template rewritten to use xcodegen `info.properties` (auto-generated Info.plist); removed `INFOPLIST_FILE` + manual plist approach which caused `CFBundleVersion` missing errors at simulator install time
+- `pilot` — `pilot test` now auto-detects when `project.yml` is newer than `.xcodeproj` and re-runs xcodegen before testing; fixes stale xcodeproj silent failures
+- `pilot` — test pass/fail count now parsed from xcodebuild's `"Executed N tests, with N failures"` summary line instead of fragile `grep -c "passed"` which counted irrelevant lines
+- `pilot` — C-3 compliance check now excludes `Theme.swift` (same as C-4); `Color(red:)` definitions are expected in Theme.swift as the single source of truth
+- `graceful-degradation.md` — added Triggers section, `// AGENT-FLAG:` usage rules and examples, `pilot build`/`pilot test` failure recovery steps per failure type
+- `CLAUDE.md` — removed redundant inline model routing table (already in `model-routing.md`); 311 lines (from 317)
+
+---
+
+## [0.15.1] — 2026-04-17
+
+### Added — pilot CLI, enhanced pattern triggers, concurrency patterns, Apple Docs Check
+
+**pilot CLI** (`pilot` — new executable at repo root)
+- 7 commands: `build`, `test`, `compliance`, `status`, `clean`, `doctor`, `update`
+- `pilot compliance` wraps all C-1 through C-11 grep checks in one command
+- `pilot build` handles xcodegen → xcodebuild automatically, logs to `.state/build-log.txt`
+- `pilot test` auto-detects scheme and simulator, logs to `.state/test-log.txt`
+- All commands output `## PILOT_*_RESULT:` machine-readable lines for agent parsing
+- `CLAUDE.md` — new CLI Interface section; agents must use `pilot` instead of raw xcodebuild calls
+
+**New pattern files**
+- `.agent/patterns/swift-concurrency.md` — @MainActor rules, async/await patterns, Sendable conformance, timeout pattern, anti-patterns for DispatchQueue.main and detached Tasks
+- `.agent/patterns/observable-migration.md` — @Observable vs ObservableObject migration table, @Bindable usage, C-6 gate behavior; both added to CLAUDE.md Patterns Reference
+
+**Pattern file enhancements**
+- Added `## Triggers` section to 6 pattern files: navigation-rules, compliance-checker, component-library, secrets-management, error-handling, model-routing
+- Triggers specify keywords, phases, and task types that should activate each pattern — reduces ambiguity about when to load context
+
+**Apple Docs Check** (`.agent/commands/apple-docs-check.md` — new)
+- Uses Sosumi MCP (`fetchAppleDocumentation`, `searchAppleDocumentation`) for live docs — not model knowledge
+- Reports API availability vs. deployment target, deprecation status, behavior changes
+- Advisory only — never blocks pipeline execution
+- Auto-triggers before Phase 2.5 in Pipeline A when spec references iOS 16+ APIs
+- Added to Standalone Commands in `CLAUDE.md`
+
+---
+
 ## [0.15.0] — 2026-04-17
 
 ### Changed — Smart model downgrade for SIMPLE pipeline

@@ -1,5 +1,11 @@
 # Pattern: Compliance Checker
 
+## Triggers
+Load this pattern when:
+- Phase 3 Code Gen completes (always — mandatory gate before Phase 3.5)
+- Keywords: `compliance`, `hard rules`, `print()`, `force unwrap`, `ObservableObject`, `@Published`, `URLSession in ViewModel`, `UserDefaults token`, `TODO`, `#Preview`, `localizedDescription`
+- Any time a Swift file is generated or modified
+
 **Run after Phase 3 (Code Gen), before Phase 3.5 (Build Validator).**
 
 Grep-based verification of Hard Rules. Does **not** rely on LLM judgment — every
@@ -49,10 +55,11 @@ grep -rn "[a-zA-Z0-9_)]!" Sources/ --include="*.swift" \
 
 ### C-3 — No hardcoded Color values (must use Theme tokens)
 ```bash
-grep -rn "Color(red:\|Color(hue:\|UIColor(red:" Sources/ --include="*.swift"
+grep -rn "Color(red:\|Color(hue:\|UIColor(red:" Sources/ --include="*.swift" | grep -v "Theme.swift"
 ```
 **Expected:** no output.
 **Fix:** replace with `Color.appPrimary` / `Color.appError` etc. from `Theme.swift`.
+**Note:** Theme.swift itself is excluded — that file is the single source of truth for color definitions.
 If the color is new, add it to `Theme.swift` with both `extension Color` and
 `extension ShapeStyle where Self == Color`.
 
