@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./pilot *)",
+      "Bash(pilot *)",
+      "Bash(xcodebuild *)",
+      "Bash(xcodegen *)",
+      "Bash(xcrun *)",
+      "Bash(swift *)",
+      "Bash(git *)",
+      "Bash(gh *)",
+      "Bash(mkdir *)",
+      "Bash(cp *)",
+      "Bash(rm *)",
+      "Bash(chmod *)",
+      "Bash(ln *)",
+      "Bash(find *)",
+      "Bash(grep *)",
+      "Bash(sed *)",
+      "Bash(awk *)",
+      "Bash(cat *)",
+      "Bash(ls *)",
+      "Bash(echo *)",
+      "Bash(brew *)",
+      "Bash(source *)",
+      "Bash(wc *)",
+      "Bash(tail *)",
+      "Bash(head *)",
+      "Bash(sort *)",
+      "Bash(date *)"
+    ]
+  }
+}
