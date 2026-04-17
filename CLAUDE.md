@@ -61,6 +61,7 @@ G2 and G3 only apply in Project Mode. G5 only applies to Pipeline C and D.
 | "status", "where am i", "progress", "resume" | `.agent/commands/status.md` — read-only |
 | "help", "what can you do", "commands", "?" | `.agent/commands/help.md` — context-aware |
 | "submit learnings" / "send learnings" | `.agent/commands/submit-learnings.md` |
+| "brief helper", "buat brief", "new brief", "help me write a brief" | `.agent/commands/brief-helper.md` — guided Q&A |
 | Anything else (brief, file path, feature request) | Auto-detect pipeline → Plan Mode first, then wait |
 
 ---
@@ -88,7 +89,8 @@ If ALL 5 signals true → route to **Pipeline E — Micro** immediately. Skip St
 
 | Score | Result | Effect |
 |---|---|---|
-| < 40 | SIMPLE | Shortcuts (see classifier) — Phase 1 uses Sonnet, small features skip waves |
+| ≤ 20 | FAST | All SIMPLE shortcuts + **skip Plan Mode** — auto-start with ⚡ notice |
+| 21–39 | SIMPLE | Shortcuts (see classifier) — Phase 1 uses Sonnet, small features skip waves |
 | ≥ 40 | COMPLEX | Full pipeline, Opus for reasoning phases |
 
 **Step 2 — Model Routing:** Every subagent spawn MUST specify a model.
@@ -269,6 +271,7 @@ to find the last completed step. Do not re-run completed tasks.
 | "setup ci" / "add ci/cd" / "github actions" / "fastlane" | `.agent/patterns/cicd.md` |
 | "submit learnings" / "send learnings" | `.agent/commands/submit-learnings.md` |
 | "apple docs check" / "check apple docs" / "api version check" | `.agent/commands/apple-docs-check.md` |
+| "brief helper" / "help me write a brief" / "buat brief" / "new brief" | `.agent/commands/brief-helper.md` |
 
 ---
 

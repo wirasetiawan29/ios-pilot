@@ -5,6 +5,40 @@ Format: [version] — date — description
 
 ---
 
+## [0.16.0] — 2026-04-17
+
+### Added — Pipeline C test, context restore, brief-helper, Fast Mode, learning collector
+
+**Pipeline C (Brownfield) — end-to-end verified**
+- Ran full B0→B5 on counter-feature: "add reset button" change request
+- B0 baseline: 9/9 tests · B5 result: 13/13 tests (+4 reset ACs) · compliance 11/11 · build ✅
+- Delta spec, impact analysis, code patch, patch validator, regression report all written to `.state/`
+
+**Context Restore — verified**
+- `context-restore.md` correctly detects in-progress pipeline from `.state/<phase>-progress.md`
+- Restore banner produces correct Feature/Pipeline/Phase/Progress/Next/Say fields
+- `output/.state/session-started.md` written for G1 gate compliance
+
+**`brief-helper` command** (`.agent/commands/brief-helper.md`) — new
+- 7-step guided Q&A flow: change type → name → description → screens → ACs → API → constraints
+- Outputs pipeline-ready brief for Greenfield, Brownfield, and Bugfix types
+- Step 9 confirm/revise loop before pipeline starts
+- TRIVIAL detection at Step 9: auto-suggests Pipeline E if signals match
+- Registered in CLAUDE.md Intent Detection + Standalone Commands
+
+**Fast Mode** — SIMPLE sub-tier for score ≤ 20
+- New threshold in `complexity-classifier.md`: FAST (≤20) · SIMPLE (21–39) · COMPLEX (≥40)
+- FAST skips Plan Mode entirely — auto-starts with `⚡ Fast Mode — score X/100` notice
+- All build/test phases still run — only the approval wait is skipped
+- CLAUDE.md Step 1 table updated with FAST row
+
+**Learning Collector — counter-feature run**
+- 5 eligible learnings written to `output/counter-feature/.state/learnings.md`
+- HIGH: C-3 false positive on Theme.swift · `@MainActor` class-level init error · INFOPLIST_FILE missing CFBundleVersion
+- MEDIUM: pilot scheme detection in same-dir CWD · AccessibilityTraits.isNotEnabled doesn't exist
+
+---
+
 ## [0.15.2] — 2026-04-18
 
 ### Fixed — battle-tested improvements from Pipeline A real run

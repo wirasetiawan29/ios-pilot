@@ -4,7 +4,7 @@
 
 No Python. No separate API key. No extra tooling beyond Xcode, `xcodegen`, and the included `pilot` CLI.
 
-![Version](https://img.shields.io/badge/version-0.15.2-blue)
+![Version](https://img.shields.io/badge/version-0.16.0-blue)
 ![Swift](https://img.shields.io/badge/Swift-5.9%2B-orange)
 ![iOS](https://img.shields.io/badge/iOS-17%2B-lightgrey)
 ![Xcode](https://img.shields.io/badge/Xcode-15%2B-blue)

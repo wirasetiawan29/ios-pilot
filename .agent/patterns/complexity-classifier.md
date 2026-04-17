@@ -72,12 +72,36 @@ To score these dimensions:
 | Score | Classification | Description |
 |---|---|---|
 | TRIVIAL pre-check | **TRIVIAL** | Single UI element on existing screen — Pipeline E (Micro) |
-| < 40 | **SIMPLE** | Small, self-contained change — shortcuts allowed |
+| ≤ 20 | **FAST** | Very small, crystal-clear change — skip Plan Mode, auto-start |
+| 21–39 | **SIMPLE** | Small, self-contained change — shortcuts allowed |
 | ≥ 40 | **COMPLEX** | Multi-layer feature — full pipeline required |
 
 ---
 
-## SIMPLE Pipeline Shortcuts
+## FAST Pipeline (score ≤ 20)
+
+FAST is a sub-tier of SIMPLE. All SIMPLE shortcuts apply, plus:
+
+```
+Plan Mode   — SKIP entirely. Do not show plan report or wait for "yes".
+              Instead, print a one-line notice and auto-start Phase 1:
+
+              ⚡ Fast Mode — score 20 or under, auto-starting.
+              Feature: <slug> · Files: <N> · Est. time: <X min>
+
+Phase 0     — skip (greenfield); run if project mode
+Phase 2     — task list only, no dependency graph
+Phase 3     — always sequential (score ≤ 20 implies ≤3 tasks)
+Phase 5     — single-pass review only
+```
+
+**Phases 3.5, 4, 4.5 are never skipped — build and tests always run, even in Fast Mode.**
+
+User CAN still interrupt at any time. Fast Mode only skips the initial approval wait.
+
+---
+
+## SIMPLE Pipeline Shortcuts (score 21–39)
 
 When SIMPLE, apply these shortcuts (all others run normally):
 
@@ -113,7 +137,7 @@ Write this file immediately after scoring:
 
 Date: <ISO date>
 Score: <total> / 100
-Result: SIMPLE | COMPLEX
+Result: FAST | SIMPLE | COMPLEX
 
 ## Score Breakdown
 | Dimension | Score | Notes |
@@ -151,6 +175,13 @@ Pipeline: Phases 1–5 with shortcuts (no parallel waves, Sonnet for spec)
 Estimated output: 3 Swift files + 1 test file
 ```
 
+For FAST results, skip the full plan report. Show only:
+
+```
+⚡ Fast Mode — score 18/100, auto-starting.
+Feature: loading-spinner · Files: 1 · Est. time: 3–5 min
+```
+
 ---
 
 ## Examples
@@ -164,14 +195,14 @@ Brief: "Tambah button 'Forgot Password?' di bawah login button di LoginView"
 - Action keyword: "tambah" + "button" ✅
 **Result: TRIVIAL → Pipeline E — Micro (skip scorer)**
 
-### Example A — SIMPLE
+### Example A — FAST
 Brief: "Add a loading spinner to the existing LoginView while the login API call is in progress"
 - Files: 1 (LoginView.swift, already exists) → 10
 - LOC: ~20 lines → 10
 - New layers: none → 0
 - Clarity: very clear → 0
 - Adjustments: none
-**Score: 20 → SIMPLE**
+**Score: 20 → FAST** — Plan Mode skipped, auto-start with ⚡ notice
 
 ### Example B — COMPLEX
 Brief: "Build a product listing screen with search, filter, pagination, and add-to-cart"
